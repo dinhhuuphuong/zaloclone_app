@@ -3,6 +3,7 @@ import { styled } from 'nativewind';
 import React from 'react';
 import { Text, View } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import { RootStackParamList } from './types';
 
 const StyledView = styled(View);
@@ -18,12 +19,6 @@ const ContactsScreen = () => (
 const DiscoverScreen = () => (
     <StyledView className='flex-1 items-center justify-center bg-gray-100'>
         <StyledText className='text-xl font-semibold'>Khám Phá</StyledText>
-    </StyledView>
-);
-
-const ProfileScreen = () => (
-    <StyledView className='flex-1 items-center justify-center bg-gray-100'>
-        <StyledText className='text-xl font-semibold'>Cá Nhân</StyledText>
     </StyledView>
 );
 

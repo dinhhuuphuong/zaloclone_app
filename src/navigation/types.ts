@@ -8,4 +8,5 @@ export type RootStackParamList = {
     Discover: undefined;
     Settings: undefined;
     ForgotPassword: undefined;
+    UpdatePassword: undefined;
 };

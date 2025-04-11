@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import ForgotPassword from '../screens/ForgotPassword';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import UpdatePassword from '../screens/UpdatePassword';
 import { getCurrentUser } from '../services/authService';
 import useUserStore from '../stores/userStore';
 import MainTabNavigator from './MainTabNavigator';
@@ -21,6 +22,12 @@ const AppNavigator = () => {
         const checkLoginStatus = async () => {
             try {
                 const userToken = await AsyncStorage.getItem('accessToken');
+
+                if (!userToken) {
+                    setIsLoggedIn(false);
+                    return;
+                }
+
                 const user = await getCurrentUser();
 
                 if (user) setUser(user);
@@ -54,6 +61,10 @@ const AppNavigator = () => {
                 <Stack.Screen
                     name='ForgotPassword'
                     component={ForgotPassword}
+                />
+                <Stack.Screen
+                    name='UpdatePassword'
+                    component={UpdatePassword}
                 />
             </Stack.Navigator>
         </NavigationContainer>

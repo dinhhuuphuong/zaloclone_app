@@ -106,3 +106,24 @@ export const checkPhoneNumber = async (
         throw error;
     }
 };
+
+interface IUpdatePassword {
+    currentPassWord: string;
+    newPassWord: string;
+    reNewPassWord: string;
+}
+
+export const updatePassword = async (
+    data: IUpdatePassword,
+): Promise<boolean> => {
+    try {
+        const response = await axiosInstance.put<IApiResponse<null>>(
+            '/users/update-password',
+            data,
+        );
+        return response.status === 200;
+    } catch (error: any) {
+        console.error('Error updating password:', error);
+        throw error;
+    }
+};
