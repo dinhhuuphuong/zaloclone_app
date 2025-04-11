@@ -12,18 +12,50 @@ import {
 } from 'react-native';
 import { RootStackParamList } from '../navigation/types';
 import { updateAvatar } from '../services/apiFunctionsUser';
+import { logout } from '../services/authService';
 import useUserStore from '../stores/userStore';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
 const ProfileScreen = () => {
-    const { user, setUser } = useUserStore();
+    const { user, setUser, logout: logoutUser } = useUserStore();
     const navigation = useNavigation<NavigationProp>();
     const [isLoading, setIsLoading] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
     const handleUpdatePassword = () => {
         navigation.navigate('UpdatePassword');
+    };
+
+    const handleLogout = () => {
+        Alert.alert(
+            'Đăng xuất',
+            'Bạn có chắc chắn muốn đăng xuất?',
+            [
+                {
+                    text: 'Hủy',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Đăng xuất',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await logout();
+                        } catch (error) {
+                            console.error('Error logging out:', error);
+                        } finally {
+                            logoutUser();
+                            navigation.reset({
+                                index: 0,
+                                routes: [{ name: 'Login' }],
+                            });
+                        }
+                    },
+                },
+            ],
+            { cancelable: true },
+        );
     };
 
     const pickImage = async () => {
@@ -130,6 +162,17 @@ const ProfileScreen = () => {
             >
                 <Text style={styles.buttonText}>Cập nhật mật khẩu</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[
+                    styles.logoutButton,
+                    isLoading && styles.buttonDisabled,
+                ]}
+                onPress={handleLogout}
+                disabled={isLoading}
+            >
+                <Text style={styles.logoutButtonText}>Đăng xuất</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -199,6 +242,18 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
     buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    logoutButton: {
+        backgroundColor: '#FF3B30',
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginTop: 16,
+    },
+    logoutButtonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',

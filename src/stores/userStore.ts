@@ -16,11 +16,13 @@ export interface User {
 interface UserStore {
     user: User | null;
     setUser: (user: User) => void;
+    logout: () => void;
 }
 
 const useUserStore = create<UserStore>((set) => ({
     user: null,
     setUser: (user: User) => set({ user }),
+    logout: () => set({ user: null }),
 }));
 
 export default useUserStore;
