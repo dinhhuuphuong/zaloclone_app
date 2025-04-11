@@ -1,7 +1,7 @@
 import axiosInstance from '../configs/axiosClient';
 
 // Interface cho dữ liệu người dùng
-interface IUser {
+export interface IUser {
     id: string;
     phoneNumber: string;
     fullName: string;

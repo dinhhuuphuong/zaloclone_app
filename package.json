@@ -10,6 +10,7 @@
         "dev:tailwind": "tailwindcss --input input.css --output tailwind.css --no-autoprefixer --watch"
     },
     "dependencies": {
+        "@expo/vector-icons": "^14.1.0",
         "@react-native-async-storage/async-storage": "^1.24.0",
         "@react-native-firebase/auth": "^21.13.0",
         "@react-navigation/bottom-tabs": "^7.3.10",
@@ -28,6 +29,7 @@
         "react-native-dotenv": "^3.4.11",
         "react-native-get-random-values": "^1.11.0",
         "react-native-webview": "^13.13.5",
+        "recoil": "^0.7.7",
         "uuid": "^11.1.0",
         "zustand": "^5.0.3"
     },
