@@ -127,3 +127,21 @@ export const updatePassword = async (
         throw error;
     }
 };
+
+export const updateAvatar = async (formData: FormData) => {
+    try {
+        const response = await axiosInstance.put<IApiResponse<null>>(
+            '/users/update-avatar',
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            },
+        );
+        return response.status === 200;
+    } catch (error: any) {
+        console.error('Error updating avatar:', error);
+        throw error;
+    }
+};
