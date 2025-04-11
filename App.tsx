@@ -1,14 +1,14 @@
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView } from 'react-native';
 import { styled } from 'nativewind';
-import HomeScreen from './screens/HomeScreen';
+import { SafeAreaView } from 'react-native';
+import AppNavigator from './src/navigation/AppNavigator';
 
 const StyledSafeAreaView = styled(SafeAreaView);
 
 export default function App() {
     return (
         <StyledSafeAreaView className='flex-1'>
-            <HomeScreen />
+            <AppNavigator />
             <StatusBar style='auto' />
         </StyledSafeAreaView>
     );

@@ -10,10 +10,25 @@
         "dev:tailwind": "tailwindcss --input input.css --output tailwind.css --no-autoprefixer --watch"
     },
     "dependencies": {
+        "@react-native-async-storage/async-storage": "^1.24.0",
+        "@react-native-firebase/auth": "^21.13.0",
+        "@react-navigation/bottom-tabs": "^7.3.10",
+        "@react-navigation/native": "^7.1.6",
+        "@react-navigation/stack": "^7.2.10",
+        "axios": "^1.8.4",
         "expo": "~52.0.43",
+        "expo-firebase-recaptcha": "^2.3.1",
+        "expo-image-picker": "^16.0.6",
         "expo-status-bar": "~2.0.1",
+        "firebase": "^10.7.1",
+        "prop-types": "^15.8.1",
         "react": "18.3.1",
-        "react-native": "0.76.9"
+        "react-icons": "^5.5.0",
+        "react-native": "0.76.9",
+        "react-native-dotenv": "^3.4.11",
+        "react-native-get-random-values": "^1.11.0",
+        "react-native-webview": "^13.13.5",
+        "uuid": "^11.1.0"
     },
     "devDependencies": {
         "@babel/core": "^7.25.2",
