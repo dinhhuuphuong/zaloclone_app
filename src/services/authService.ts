@@ -1,15 +1,5 @@
 import axiosInstance from '../configs/axiosClient';
-
-interface User {
-    id: string;
-    phoneNumber: string;
-    fullName: string;
-    avatar?: string;
-    gender?: string;
-    dayOfBirth?: string;
-    createdAt?: string;
-    updatedAt?: string;
-}
+import { User } from '../stores/userStore';
 
 interface LoginData {
     phoneNumber: string;

@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import 'react-native-get-random-values';
 import OTPInput from '../components/OTPInput';
+import { APP_INFO } from '../constants/app.constants';
 import app, { auth } from '../firebase/firebase';
 import { register } from '../services/authService';
 
@@ -576,6 +577,16 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
                 <Text style={styles.title}>Đăng ký tài khoản</Text>
                 {renderStep()}
+                <View style={styles.footer}>
+                    <Text style={styles.footerText}>
+                        Bạn đã có tài khoản {APP_INFO.NAME}?
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('Login')}
+                    >
+                        <Text style={styles.loginLink}>Đăng nhập ngay</Text>
+                    </TouchableOpacity>
+                </View>
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -721,6 +732,18 @@ const styles = StyleSheet.create({
     required: {
         color: 'red',
         fontWeight: 'bold',
+    },
+    footer: {
+        marginTop: 20,
+        alignItems: 'center',
+    },
+    footerText: {
+        textAlign: 'center',
+    },
+    loginLink: {
+        color: '#0078E8',
+        fontWeight: 'bold',
+        marginTop: 5,
     },
 });
 
