@@ -53,7 +53,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             Alert.alert('Thành công', 'Đăng nhập thành công!');
             navigation.navigate('Home');
         } catch (error) {
-            Alert.alert('Lỗi', (error as Error).message);
+            Alert.alert(
+                'Lỗi',
+                (error as Error).message || 'Lỗi khi đăng nhập!',
+            );
         }
     };
 

@@ -169,6 +169,11 @@ const ForgotPassword: React.FC = () => {
                 }
             } catch (error) {
                 console.log('Lỗi khi kiểm tra số điện thoại', error);
+                Alert.alert(
+                    'Lỗi',
+                    (error as Error).message ||
+                        'Lỗi khi kiểm tra số điện thoại!',
+                );
             }
         } else {
             setErrors((prev) => ({ ...prev, phoneNumber: phoneError }));
@@ -205,7 +210,10 @@ const ForgotPassword: React.FC = () => {
                 navigation.navigate('Login');
             } catch (error) {
                 console.log('Lỗi khi update mật khẩu', error);
-                Alert.alert('Lỗi', 'Lỗi khi đổi mật khẩu!');
+                Alert.alert(
+                    'Lỗi',
+                    (error as Error).message || 'Lỗi khi đổi mật khẩu!',
+                );
             }
         } else {
             setErrors({

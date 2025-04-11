@@ -53,16 +53,16 @@ export const setupInterceptors = (
             if (error.response?.status === 410 && !originalRequest._retry) {
                 originalRequest._retry = true;
                 try {
-                    const response = await axios.get(
-                        `${process.env.EXPO_PUBLIC_ENDPOINT}/users/refresh-token`,
-                        { withCredentials: true },
+                    const refreshToken = await AsyncStorage.getItem(
+                        'refreshToken',
+                    );
+
+                    const response = await axios.post(
+                        `${process.env.EXPO_PUBLIC_ENDPOINT}/users/refresh-token-app`,
+                        { refreshToken },
                     );
                     const data = response.data;
                     await AsyncStorage.setItem('accessToken', data.accessToken);
-                    await AsyncStorage.setItem(
-                        'refreshToken',
-                        data.refreshToken,
-                    );
                     originalRequest.headers = originalRequest.headers || {};
                     originalRequest.headers[
                         'Authorization'
