@@ -7,4 +7,5 @@ export type RootStackParamList = {
     Contacts: undefined;
     Discover: undefined;
     Settings: undefined;
+    ForgotPassword: undefined;
 };

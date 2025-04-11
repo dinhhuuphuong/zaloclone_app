@@ -25,9 +25,19 @@ interface RegisterFormData {
     dayOfBirth: string;
 }
 
-interface AuthResponse {
-    user: User;
+export interface AuthResponse {
     accessToken: string;
+    avatar: string;
+    createAt: number;
+    dayOfBirth: string;
+    fullName: string;
+    gender: boolean;
+    phoneNumber: string;
+    refreshToken: string;
+    role: string;
+    slug: string;
+    updateAt?: any;
+    userID: string;
 }
 
 export const getCurrentUser = async (): Promise<User> => {

@@ -13,11 +13,8 @@ const axiosInstance: AxiosInstance = axios.create({
     withCredentials: true,
 });
 
-type SetAccessTokenFunction = (token: string | null) => void;
-
 export const setupInterceptors = (
     navigate: (name: string, params?: object) => void,
-    setAccessToken: SetAccessTokenFunction,
 ): void => {
     axiosInstance.interceptors.request.use(
         async (config: InternalAxiosRequestConfig) => {
@@ -57,12 +54,15 @@ export const setupInterceptors = (
                 originalRequest._retry = true;
                 try {
                     const response = await axios.get(
-                        `${process.env.API_URL_8022}/users/refresh-token`,
+                        `${process.env.EXPO_PUBLIC_ENDPOINT}/users/refresh-token`,
                         { withCredentials: true },
                     );
                     const data = response.data;
-                    setAccessToken(data.accessToken);
                     await AsyncStorage.setItem('accessToken', data.accessToken);
+                    await AsyncStorage.setItem(
+                        'refreshToken',
+                        data.refreshToken,
+                    );
                     originalRequest.headers = originalRequest.headers || {};
                     originalRequest.headers[
                         'Authorization'
@@ -70,8 +70,8 @@ export const setupInterceptors = (
                     return axiosInstance(originalRequest);
                 } catch (refreshError: any) {
                     console.error('Refresh token failed:', refreshError);
-                    setAccessToken(null);
                     await AsyncStorage.removeItem('accessToken');
+                    await AsyncStorage.removeItem('refreshToken');
                     navigate('Login');
                     return Promise.reject(
                         new Error('Phiên đăng nhập đã hết hạn'),
@@ -85,7 +85,6 @@ export const setupInterceptors = (
 
 setupInterceptors(
     () => {}, // Hàm navigate mặc định
-    () => {}, // Hàm setAccessToken mặc định
 );
 
 export default axiosInstance;

@@ -5,19 +5,21 @@ import React, { useEffect, useState } from 'react';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import { getCurrentUser } from '../services/authService';
 import MainTabNavigator from './MainTabNavigator';
 import { RootStackParamList } from './types';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(false);
 
     useEffect(() => {
         // Kiểm tra trạng thái đăng nhập từ AsyncStorage
         const checkLoginStatus = async () => {
             try {
-                const userToken = await AsyncStorage.getItem('userToken');
+                const userToken = await AsyncStorage.getItem('accessToken');
+                const user = await getCurrentUser();
                 setIsLoggedIn(!!userToken);
             } catch (error) {
                 console.error('Lỗi khi kiểm tra đăng nhập:', error);
