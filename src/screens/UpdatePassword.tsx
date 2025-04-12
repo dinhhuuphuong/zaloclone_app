@@ -35,10 +35,10 @@ const UpdatePassword = () => {
             });
 
             Alert.alert('Thành công', 'Mật khẩu đã được cập nhật thành công');
-        } catch (error) {
+        } catch (error: any) {
             Alert.alert(
                 'Lỗi',
-                (error as Error).message || 'Mật khẩu không chính xác',
+                error.data?.message || error.message || 'Mật khẩu không chính xác',
             );
         }
     };

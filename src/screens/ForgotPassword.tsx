@@ -83,7 +83,7 @@ const ForgotPassword: React.FC = () => {
             setStep(2);
         } catch (error: any) {
             console.error('Không thể gửi OTP:', error.message);
-            Alert.alert('Lỗi', 'Không thể gửi OTP: ' + error.message);
+            Alert.alert('Lỗi', 'Không thể gửi OTP: ' + error.data?.message || error.message);
         }
     };
 
@@ -167,11 +167,11 @@ const ForgotPassword: React.FC = () => {
                 } else {
                     Alert.alert('Cảnh báo', 'Số điện thoại không tồn tại');
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.log('Lỗi khi kiểm tra số điện thoại', error);
                 Alert.alert(
                     'Lỗi',
-                    (error as Error).message ||
+                    error.data?.message || error.message ||
                         'Lỗi khi kiểm tra số điện thoại!',
                 );
             }

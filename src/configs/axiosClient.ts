@@ -78,7 +78,11 @@ export const setupInterceptors = (
                     );
                 }
             }
-            return Promise.reject(error);
+            return Promise.reject({
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message,
+            });
         },
     );
 };

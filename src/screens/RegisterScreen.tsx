@@ -69,6 +69,7 @@ interface CustomInputProps {
     label?: string;
     value: string;
     onChangeText: (text: string) => void;
+    onBlur?: () => void;
     placeholder?: string;
     secureTextEntry?: boolean;
     keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
@@ -87,6 +88,7 @@ const CustomInput = ({
     label,
     value,
     onChangeText,
+    onBlur = ()  => {},
     placeholder,
     secureTextEntry = false,
     keyboardType = 'default',
@@ -101,6 +103,7 @@ const CustomInput = ({
             placeholder={placeholder}
             secureTextEntry={secureTextEntry}
             keyboardType={keyboardType}
+            onBlur={onBlur}
         />
         {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
@@ -316,11 +319,11 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                         onPress: () => navigation.navigate('Login'),
                     },
                 ]);
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Lỗi khi đăng ký', JSON.stringify(error));
                 Alert.alert(
                     'Lỗi',
-                    (error as Error).message || 'Số điện thoại đã tồn tại!',
+                    error.data?.message || error.message || 'Số điện thoại đã tồn tại!',
                 );
             }
         }
@@ -510,6 +513,12 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                             onChangeText={(text: string) =>
                                 handleChange('dayOfBirth', text)
                             }
+                            onBlur={() =>
+                                setDayOfBirthError(
+                                    validateDayOfBirth(formData.dayOfBirth),
+                                )
+                            }
+                            
                             error={dayOfBirthError}
                         />
 
@@ -519,6 +528,9 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                             value={formData.passWord}
                             onChangeText={(text: string) =>
                                 handleChange('passWord', text)
+                            }
+                            onBlur={() =>
+                                setPasswordError(validatePassword(formData.passWord))
                             }
                             error={passwordError}
                             placeholder='Nhập mật khẩu'
@@ -530,6 +542,11 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                             value={formData.confirm_password}
                             onChangeText={(text: string) =>
                                 handleChange('confirm_password', text)
+                            }
+                            onBlur={() =>
+                                setConfirmPasswordError(
+                                    validateConfirmPassword(formData.confirm_password),
+                                )
                             }
                             error={confirmPasswordError}
                             placeholder='Nhập lại mật khẩu'
