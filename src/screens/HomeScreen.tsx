@@ -1,10 +1,12 @@
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { styled } from 'nativewind';
-import React from 'react';
+import React, { useState } from 'react';
 import {
     FlatList,
     Image,
+    Modal,
+    Pressable,
     StyleSheet,
     Text,
     TextInput,
@@ -66,9 +68,33 @@ const mockMessages = [
     },
 ];
 
+const menuItems = [
+    { id: '1', title: 'Thêm bạn', icon: '👤' },
+    { id: '2', title: 'Tạo nhóm', icon: '👥' },
+    { id: '3', title: 'Cloud của tôi', icon: '☁️' },
+    { id: '4', title: 'Lịch Zalo', icon: '📅' },
+    { id: '5', title: 'Tạo cuộc gọi nhóm', icon: '📞' },
+    { id: '6', title: 'Thiết bị đã đăng nhập', icon: '💻' },
+];
+
 export default function HomeScreen() {
     const navigation = useNavigation<NavigationProp>();
     const { setChat } = useChatStore();
+    const [isMenuVisible, setIsMenuVisible] = useState(false);
+
+    const handleMenuItemPress = (itemId: string) => {
+        setIsMenuVisible(false);
+        // Xử lý khi nhấn vào menu item
+        switch (itemId) {
+            case '1':
+                // Xử lý thêm bạn
+                break;
+            case '2':
+                // Xử lý tạo nhóm
+                break;
+            // ... xử lý các case khác
+        }
+    };
 
     return (
         <StyledView className='flex-1 flex-row bg-gray-100'>
@@ -81,9 +107,47 @@ export default function HomeScreen() {
                     />
                     <View style={styles.headerIcons}>
                         <Text style={styles.icon}>📷</Text>
-                        <Text style={styles.icon}>＋</Text>
+                        <TouchableOpacity
+                            onPress={() => setIsMenuVisible(true)}
+                        >
+                            <Text style={styles.icon}>＋</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
+
+                {/* POPUP MENU */}
+                <Modal
+                    visible={isMenuVisible}
+                    transparent
+                    animationType='fade'
+                    onRequestClose={() => setIsMenuVisible(false)}
+                >
+                    <Pressable
+                        style={styles.modalOverlay}
+                        onPress={() => setIsMenuVisible(false)}
+                    >
+                        <View style={styles.menuPositioner}>
+                            <Pressable style={styles.menuContainer}>
+                                {menuItems.map((item) => (
+                                    <TouchableOpacity
+                                        key={item.id}
+                                        style={styles.menuItem}
+                                        onPress={() =>
+                                            handleMenuItemPress(item.id)
+                                        }
+                                    >
+                                        <Text style={styles.menuIcon}>
+                                            {item.icon}
+                                        </Text>
+                                        <Text style={styles.menuText}>
+                                            {item.title}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </Pressable>
+                        </View>
+                    </Pressable>
+                </Modal>
 
                 {/* TAB */}
                 <View style={styles.tab}>
@@ -190,5 +254,44 @@ const styles = StyleSheet.create({
     },
     tabIcon: {
         fontSize: 20,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    },
+    menuPositioner: {
+        position: 'absolute',
+        top: 60,
+        right: 10,
+        width: 200,
+    },
+    menuContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        paddingVertical: 8,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+    },
+    menuIcon: {
+        fontSize: 18,
+        marginRight: 12,
+        width: 24,
+    },
+    menuText: {
+        fontSize: 15,
+        color: '#000',
+        fontWeight: '400',
     },
 });
