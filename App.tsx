@@ -9,7 +9,7 @@ export default function App() {
     return (
         <StyledSafeAreaView className='flex-1'>
             <AppNavigator />
-            <StatusBar style='auto' />
+            <StatusBar backgroundColor='#0084ff' />
         </StyledSafeAreaView>
     );
 }

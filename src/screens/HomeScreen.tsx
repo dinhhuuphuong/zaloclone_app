@@ -1,3 +1,5 @@
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { styled } from 'nativewind';
 import React from 'react';
 import {
@@ -6,10 +8,15 @@ import {
     StyleSheet,
     Text,
     TextInput,
+    TouchableOpacity,
     View,
 } from 'react-native';
+import { RootStackParamList } from '../navigation/types';
+import useChatStore from '../stores/chatStore';
 
 const StyledView = styled(View);
+
+type NavigationProp = StackNavigationProp<RootStackParamList, 'Chat'>;
 
 const mockMessages = [
     {
@@ -60,6 +67,9 @@ const mockMessages = [
 ];
 
 export default function HomeScreen() {
+    const navigation = useNavigation<NavigationProp>();
+    const { setChat } = useChatStore();
+
     return (
         <StyledView className='flex-1 flex-row bg-gray-100'>
             <View style={styles.container}>
@@ -88,16 +98,28 @@ export default function HomeScreen() {
                     data={mockMessages}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (
-                        <View style={styles.messageItem}>
-                            <Image source={item.avatar} style={styles.avatar} />
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.name}>{item.name}</Text>
-                                <Text style={styles.message}>
-                                    {item.message}
-                                </Text>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setChat({
+                                    id: item.id,
+                                });
+                                navigation.navigate('Chat');
+                            }}
+                        >
+                            <View style={styles.messageItem}>
+                                <Image
+                                    source={item.avatar}
+                                    style={styles.avatar}
+                                />
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.name}>{item.name}</Text>
+                                    <Text style={styles.message}>
+                                        {item.message}
+                                    </Text>
+                                </View>
+                                <Text style={styles.time}>{item.time}</Text>
                             </View>
-                            <Text style={styles.time}>{item.time}</Text>
-                        </View>
+                        </TouchableOpacity>
                     )}
                 />
             </View>
@@ -108,7 +130,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },
     header: {
-        backgroundColor: '#0099FF',
+        backgroundColor: '#0084ff',
         flexDirection: 'row',
         paddingTop: 40,
         paddingHorizontal: 16,

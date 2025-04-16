@@ -2,20 +2,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { styled } from 'nativewind';
 import React from 'react';
 import { Text, View } from 'react-native';
-import { ChatIcon, MeIcon } from '../assets/svg';
+import { ChatIcon, ContactIcon, MeIcon } from '../assets/svg';
+import FriendsScreen from '../screens/FriendsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { RootStackParamList } from './types';
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
-
-// Placeholders cho các màn hình chưa được tạo
-const ContactsScreen = () => (
-    <StyledView className='flex-1 items-center justify-center bg-gray-100'>
-        <StyledText className='text-xl font-semibold'>Danh Bạ</StyledText>
-    </StyledView>
-);
 
 const DiscoverScreen = () => (
     <StyledView className='flex-1 items-center justify-center bg-gray-100'>
@@ -48,10 +42,10 @@ const MainTabNavigator = () => {
             />
             <Tab.Screen
                 name='Contacts'
-                component={ContactsScreen}
+                component={FriendsScreen}
                 options={{
                     tabBarLabel: 'Danh Bạ',
-                    tabBarIcon: ChatIcon,
+                    tabBarIcon: ContactIcon,
                 }}
             />
             <Tab.Screen
