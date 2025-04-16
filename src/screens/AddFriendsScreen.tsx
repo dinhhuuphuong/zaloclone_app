@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useState } from 'react';
 import {
+    ActivityIndicator,
     Image,
     ScrollView,
     StyleSheet,
@@ -26,6 +27,7 @@ type NavigationProp = StackNavigationProp<RootStackParamList, 'AddFriend'>;
 export default function AddFriendsScreen() {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [countryCode] = useState('+84');
+    const [isLoading, setIsLoading] = useState(false);
     const navigation = useNavigation<NavigationProp>();
 
     const isValidPhoneNumber = (phone: string) => {
@@ -37,11 +39,13 @@ export default function AddFriendsScreen() {
         if (!isValidPhoneNumber(phoneNumber)) return;
 
         try {
+            setIsLoading(true);
             const user = await searchUserByPhoneNumber(phoneNumber);
-
             navigation.navigate('OtherUserProfile', user);
         } catch (error) {
             showError(error, 'Error searching user by phone number');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -96,16 +100,21 @@ export default function AddFriendsScreen() {
                     <TouchableOpacity
                         style={styles.submitButton}
                         onPress={handleNext}
+                        disabled={isLoading || !isValidPhoneNumber(phoneNumber)}
                     >
-                        <Ionicons
-                            name='arrow-forward'
-                            size={24}
-                            color={
-                                isValidPhoneNumber(phoneNumber)
-                                    ? '#0066cc'
-                                    : '#999'
-                            }
-                        />
+                        {isLoading ? (
+                            <ActivityIndicator size='small' color='#0066cc' />
+                        ) : (
+                            <Ionicons
+                                name='arrow-forward'
+                                size={24}
+                                color={
+                                    isValidPhoneNumber(phoneNumber)
+                                        ? '#0066cc'
+                                        : '#999'
+                                }
+                            />
+                        )}
                     </TouchableOpacity>
                 </View>
 
