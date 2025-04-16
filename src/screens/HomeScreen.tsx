@@ -1,5 +1,3 @@
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
 import { styled } from 'nativewind';
 import React from 'react';
 import {
@@ -8,16 +6,11 @@ import {
     StyleSheet,
     Text,
     TextInput,
-    TouchableOpacity,
     View,
 } from 'react-native';
-import { RootStackParamList } from '../navigation/types';
 
 const StyledView = styled(View);
 
-type SignUpScreenProps = {
-    navigate: (screen: 'Start' | 'Login' | 'SignUp') => void;
-};
 const mockMessages = [
     {
         id: '1',
@@ -66,11 +59,7 @@ const mockMessages = [
     },
 ];
 
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
-
 export default function HomeScreen() {
-    const navigation = useNavigation<HomeScreenNavigationProp>();
-
     return (
         <StyledView className='flex-1 flex-row bg-gray-100'>
             <View style={styles.container}>
@@ -111,19 +100,6 @@ export default function HomeScreen() {
                         </View>
                     )}
                 />
-
-                {/* BOTTOM NAV */}
-                <View style={styles.bottomTab}>
-                    <Text style={styles.tabIcon}>💬</Text>
-                    <Text style={styles.tabIcon}>👤</Text>
-                    <Text style={styles.tabIcon}>🔍</Text>
-                    <Text style={styles.tabIcon}>📰</Text>
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate('Home')}
-                    >
-                        <Text style={styles.tabIcon}>⚙️</Text>
-                    </TouchableOpacity>
-                </View>
             </View>
         </StyledView>
     );

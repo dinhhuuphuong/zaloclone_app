@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { styled } from 'nativewind';
 import React from 'react';
 import { Text, View } from 'react-native';
+import { ChatIcon, MeIcon } from '../assets/svg';
 import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { RootStackParamList } from './types';
@@ -42,15 +43,7 @@ const MainTabNavigator = () => {
                 component={HomeScreen}
                 options={{
                     tabBarLabel: 'Tin Nhắn',
-                    tabBarIcon: ({ color }: { color: string }) => (
-                        <StyledView
-                            style={{
-                                height: 24,
-                                width: 24,
-                                backgroundColor: color,
-                            }}
-                        />
-                    ),
+                    tabBarIcon: ChatIcon,
                 }}
             />
             <Tab.Screen
@@ -58,15 +51,7 @@ const MainTabNavigator = () => {
                 component={ContactsScreen}
                 options={{
                     tabBarLabel: 'Danh Bạ',
-                    tabBarIcon: ({ color }: { color: string }) => (
-                        <StyledView
-                            style={{
-                                height: 24,
-                                width: 24,
-                                backgroundColor: color,
-                            }}
-                        />
-                    ),
+                    tabBarIcon: ChatIcon,
                 }}
             />
             <Tab.Screen
@@ -74,15 +59,7 @@ const MainTabNavigator = () => {
                 component={DiscoverScreen}
                 options={{
                     tabBarLabel: 'Khám Phá',
-                    tabBarIcon: ({ color }: { color: string }) => (
-                        <StyledView
-                            style={{
-                                height: 24,
-                                width: 24,
-                                backgroundColor: color,
-                            }}
-                        />
-                    ),
+                    tabBarIcon: ChatIcon,
                 }}
             />
             <Tab.Screen
@@ -90,15 +67,7 @@ const MainTabNavigator = () => {
                 component={ProfileScreen}
                 options={{
                     tabBarLabel: 'Cá Nhân',
-                    tabBarIcon: ({ color }: { color: string }) => (
-                        <StyledView
-                            style={{
-                                height: 24,
-                                width: 24,
-                                backgroundColor: color,
-                            }}
-                        />
-                    ),
+                    tabBarIcon: MeIcon,
                 }}
             />
         </Tab.Navigator>

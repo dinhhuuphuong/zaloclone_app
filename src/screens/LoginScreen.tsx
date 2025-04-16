@@ -16,6 +16,7 @@ import { APP_INFO } from '../constants/app.constants';
 import { RootStackParamList } from '../navigation/types';
 import { login } from '../services/authService';
 import useUserStore from '../stores/userStore';
+import { showError } from '../utils';
 
 type LoginScreenNavigationProp = StackNavigationProp<
     RootStackParamList,
@@ -35,8 +36,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     const { setUser } = useUserStore();
 
     const [formData, setFormData] = useState<FormData>({
-        phoneNumber: '',
-        passWord: '',
+        phoneNumber: process.env.NODE_ENV === 'development' ? '0987967077' : '',
+        passWord: process.env.NODE_ENV === 'development' ? '123456Aa' : '',
     });
 
     const handleSubmit = async () => {
@@ -53,11 +54,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             Alert.alert('Thành công', 'Đăng nhập thành công!');
             navigation.navigate('Home');
         } catch (error: any) {
-            console.error('Login error:', error);
-            Alert.alert(
-                'Lỗi',
-                error.data?.message || error.message || 'Lỗi khi đăng nhập!',
-            );
+            showError(error, 'Lỗi khi đăng nhập!');
         }
     };
 
