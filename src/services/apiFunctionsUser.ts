@@ -1,4 +1,5 @@
 import axiosInstance from '../configs/axiosClient';
+import { SearchUserByPhoneNumber } from '../types/User';
 
 // Interface cho dữ liệu người dùng
 export interface IUser {
@@ -33,12 +34,12 @@ interface IApiResponse<T> {
  */
 export const searchUserByPhoneNumber = async (
     phoneNumber: string,
-): Promise<IUser[]> => {
+): Promise<SearchUserByPhoneNumber> => {
     try {
-        const response = await axiosInstance.get<IApiResponse<IUser[]>>(
+        const response = await axiosInstance.get(
             `/users/search/${phoneNumber}`,
         );
-        return response.data.data;
+        return response.data;
     } catch (error) {
         console.error('Error searching user by phone number:', error);
         throw error;

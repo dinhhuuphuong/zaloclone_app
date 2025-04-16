@@ -1,3 +1,5 @@
+import { IUserBase, SearchUserByPhoneNumber } from '../types/User';
+
 export type RootStackParamList = {
     Home: undefined;
     Register: undefined;
@@ -10,6 +12,6 @@ export type RootStackParamList = {
     ForgotPassword: undefined;
     UpdatePassword: undefined;
     AddFriends: undefined;
-    AddFriend: undefined;
-    OtherUserProfile: undefined;
+    AddFriend: IUserBase;
+    OtherUserProfile: SearchUserByPhoneNumber;
 };

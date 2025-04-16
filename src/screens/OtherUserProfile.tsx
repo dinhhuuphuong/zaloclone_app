@@ -1,5 +1,5 @@
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import {
     Dimensions,
@@ -22,9 +22,12 @@ type SuggestedFriend = {
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'AddFriend'>;
+type RouteProps = RouteProp<RootStackParamList, 'OtherUserProfile'>;
 
 export default function OtherUserProfile() {
     const navigation = useNavigation<NavigationProp>();
+    const route = useRoute<RouteProps>();
+    const userInfo = route.params;
 
     // Sample data for suggested friends
     const suggestedFriends: SuggestedFriend[] = [
@@ -54,7 +57,7 @@ export default function OtherUserProfile() {
             <ScrollView style={styles.scrollView} bounces={false}>
                 {/* Header */}
                 <ImageBackground
-                    source={require('../assets/images/premium_photo-1664438942504-cc05d2c80f38.avif')}
+                    source={require('../assets/images/photo-1741513543210-c17d608be117.png')}
                     style={styles.headerBackground}
                 >
                     <View style={styles.header}>
@@ -89,7 +92,11 @@ export default function OtherUserProfile() {
                     {/* Profile Picture */}
                     <View style={styles.profilePictureContainer}>
                         <Image
-                            source={require('../assets/images/225-default-avatar.png')}
+                            source={
+                                userInfo.avatar
+                                    ? { uri: userInfo.avatar }
+                                    : require('../assets/images/225-default-avatar.png')
+                            }
                             style={styles.profilePicture}
                         />
                     </View>
@@ -98,14 +105,16 @@ export default function OtherUserProfile() {
                 {/* Profile Info */}
                 <View style={styles.profileInfo}>
                     <View style={styles.nameContainer}>
-                        <Text style={styles.profileName}>Bàn Văn Mười</Text>
+                        <Text style={styles.profileName}>
+                            {userInfo.fullName}
+                        </Text>
                         <TouchableOpacity>
                             <Feather name='edit-2' size={18} color='#666' />
                         </TouchableOpacity>
                     </View>
                     <Text style={styles.profileStatus}>
-                        You can't view Bàn Văn Mười's timeline posts since
-                        you're not friends
+                        You can't view {userInfo.fullName}'s timeline posts
+                        since you're not friends
                     </Text>
 
                     {/* Action Buttons */}
@@ -122,7 +131,9 @@ export default function OtherUserProfile() {
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.addFriendButton}
-                            onPress={() => navigation.navigate('AddFriend')}
+                            onPress={() =>
+                                navigation.navigate('AddFriend', userInfo)
+                            }
                         >
                             <Ionicons
                                 name='person-add'

@@ -18,6 +18,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
+import { searchUserByPhoneNumber } from '../services/apiFunctionsUser';
+import { showError } from '../utils';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'AddFriend'>;
 
@@ -31,10 +33,16 @@ export default function AddFriendsScreen() {
         return phoneRegex.test(phone);
     };
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (!isValidPhoneNumber(phoneNumber)) return;
 
-        navigation.navigate('OtherUserProfile');
+        try {
+            const user = await searchUserByPhoneNumber(phoneNumber);
+
+            navigation.navigate('OtherUserProfile', user);
+        } catch (error) {
+            showError(error, 'Error searching user by phone number');
+        }
     };
 
     const handleCancel = () => {

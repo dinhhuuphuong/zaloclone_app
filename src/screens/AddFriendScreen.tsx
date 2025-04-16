@@ -1,5 +1,5 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useState } from 'react';
 import {
@@ -13,14 +13,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
+import useUserStore from '../stores/userStore';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'AddFriend'>;
+type RouteProps = RouteProp<RootStackParamList, 'AddFriend'>;
 
 export default function AddFriendScreen() {
+    const { user } = useUserStore();
     const navigation = useNavigation<NavigationProp>();
+    const route = useRoute<RouteProps>();
+    const userInfo = route.params;
     const [isBlocked, setIsBlocked] = useState(false);
     const [message, setMessage] = useState(
-        "Hi, I'm Hà Anh Thảo. I've got your phone number",
+        `Hi, I'm ${user?.fullName}. I've got your phone number`,
     );
 
     const toggleSwitch = () => setIsBlocked((previousState) => !previousState);
@@ -45,11 +50,15 @@ export default function AddFriendScreen() {
             {/* Profile Section */}
             <View style={styles.profileSection}>
                 <Image
-                    source={require('../assets/images/225-default-avatar.png')}
+                    source={
+                        userInfo.avatar
+                            ? { uri: userInfo.avatar }
+                            : require('../assets/images/225-default-avatar.png')
+                    }
                     style={styles.profilePicture}
                 />
                 <View style={styles.nameContainer}>
-                    <Text style={styles.profileName}>Bàn Văn Mười</Text>
+                    <Text style={styles.profileName}>{userInfo.fullName}</Text>
                     <TouchableOpacity>
                         <Feather name='edit-2' size={18} color='#666' />
                     </TouchableOpacity>
