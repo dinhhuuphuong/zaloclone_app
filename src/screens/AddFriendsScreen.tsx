@@ -4,6 +4,8 @@ import {
     MaterialCommunityIcons,
     MaterialIcons,
 } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useState } from 'react';
 import {
     Image,
@@ -15,16 +17,38 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { RootStackParamList } from '../navigation/types';
+
+type NavigationProp = StackNavigationProp<RootStackParamList, 'AddFriend'>;
 
 export default function AddFriendsScreen() {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [countryCode] = useState('+84');
+    const navigation = useNavigation<NavigationProp>();
+
+    const isValidPhoneNumber = (phone: string) => {
+        const phoneRegex = /^0\d{9}$/;
+        return phoneRegex.test(phone);
+    };
+
+    const handleNext = () => {
+        if (!isValidPhoneNumber(phoneNumber)) return;
+
+        navigation.navigate('OtherUserProfile');
+    };
+
+    const handleCancel = () => {
+        navigation.goBack();
+    };
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={handleCancel}
+                >
                     <Ionicons name='chevron-back' size={24} color='#000' />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Add Friends</Text>
@@ -61,8 +85,19 @@ export default function AddFriendsScreen() {
                         value={phoneNumber}
                         onChangeText={setPhoneNumber}
                     />
-                    <TouchableOpacity style={styles.submitButton}>
-                        <Ionicons name='arrow-forward' size={24} color='#999' />
+                    <TouchableOpacity
+                        style={styles.submitButton}
+                        onPress={handleNext}
+                    >
+                        <Ionicons
+                            name='arrow-forward'
+                            size={24}
+                            color={
+                                isValidPhoneNumber(phoneNumber)
+                                    ? '#0066cc'
+                                    : '#999'
+                            }
+                        />
                     </TouchableOpacity>
                 </View>
 
