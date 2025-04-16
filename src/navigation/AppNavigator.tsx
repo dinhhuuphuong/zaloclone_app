@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import React, { useEffect, useState } from 'react';
+import AddFriendsScreen from '../screens/AddFriendsScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ForgotPassword from '../screens/ForgotPassword';
 import LoginScreen from '../screens/LoginScreen';
@@ -68,6 +69,7 @@ const AppNavigator = () => {
                     component={UpdatePassword}
                 />
                 <Stack.Screen name='Chat' component={ChatScreen} />
+                <Stack.Screen name='AddFriends' component={AddFriendsScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

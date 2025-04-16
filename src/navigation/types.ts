@@ -9,4 +9,5 @@ export type RootStackParamList = {
     Settings: undefined;
     ForgotPassword: undefined;
     UpdatePassword: undefined;
+    AddFriends: undefined;
 };

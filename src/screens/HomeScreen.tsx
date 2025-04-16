@@ -87,7 +87,7 @@ export default function HomeScreen() {
         // Xử lý khi nhấn vào menu item
         switch (itemId) {
             case '1':
-                // Xử lý thêm bạn
+                navigation.navigate('AddFriends');
                 break;
             case '2':
                 // Xử lý tạo nhóm
