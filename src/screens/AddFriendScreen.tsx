@@ -13,7 +13,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
+import { sendFriendRequest } from '../services/apiFunctionFriend';
 import useUserStore from '../stores/userStore';
+import { showError } from '../utils';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'AddFriend'>;
 type RouteProps = RouteProp<RootStackParamList, 'AddFriend'>;
@@ -32,6 +34,15 @@ export default function AddFriendScreen() {
 
     const handleCancel = () => {
         navigation.goBack();
+    };
+
+    const handleSendRequest = async () => {
+        try {
+            await sendFriendRequest(userInfo.userID);
+            navigation.goBack();
+        } catch (error) {
+            showError(error, 'Send request failed');
+        }
     };
 
     return (
@@ -97,7 +108,10 @@ export default function AddFriendScreen() {
             </View>
 
             {/* Send Request Button */}
-            <TouchableOpacity style={styles.sendRequestButton}>
+            <TouchableOpacity
+                style={styles.sendRequestButton}
+                onPress={handleSendRequest}
+            >
                 <Text style={styles.sendRequestText}>Send request</Text>
             </TouchableOpacity>
         </SafeAreaView>

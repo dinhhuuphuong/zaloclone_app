@@ -1,13 +1,9 @@
 import axiosInstance from '../configs/axiosClient';
-
-interface Message {
-    createdAt: string;
-    // Thêm các trường khác của message nếu cần
-}
+import { IMessage } from '../stores/messagesStore';
 
 export const getMessagesByConversation = async (
     conversationID: string,
-): Promise<Message[]> => {
+): Promise<IMessage[]> => {
     const response = await axiosInstance.get(
         `/messages/conversation/${conversationID}`,
     );

@@ -1,4 +1,5 @@
 import axiosInstance from '../configs/axiosClient';
+import { IFriendRequest } from '../types/friend';
 
 interface FriendResponse {
     data: any; // Bạn có thể thay thế 'any' bằng interface cụ thể cho response data
@@ -38,20 +39,20 @@ export const declineFriendRequest = async (
 };
 
 // Lấy danh sách lời mời kết bạn
-export const getFriendRequests = async (): Promise<FriendResponse> => {
+export const getFriendRequests = async (): Promise<IFriendRequest[]> => {
     const response = await axiosInstance.get(`/friends/requests`, {});
     console.log('response', response);
     return response.data;
 };
 
 // Lấy danh sách lời mời kết bạn đã gửi
-export const getSentFriendRequests = async (): Promise<FriendResponse> => {
+export const getSentFriendRequests = async (): Promise<IFriendRequest[]> => {
     const response = await axiosInstance.get(`/friends/requests/sent`, {});
     return response.data;
 };
 
 // Lấy danh sách bạn bè
-export const getFriendList = async (): Promise<FriendResponse> => {
+export const getFriendList = async (): Promise<IFriendRequest[]> => {
     const response = await axiosInstance.get(`/friends`, {});
     console.log('getFriendList', response);
     return response.data;

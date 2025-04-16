@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { styled } from 'nativewind';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     FlatList,
     Image,
@@ -13,8 +13,22 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useChat } from '../hooks/useChat';
+import useConversationSocket from '../hooks/useConversationSocket';
+import useFriendRequestSocket from '../hooks/useFriendRequestSocket';
+import useMessageSocket from '../hooks/useMessageSocket';
+import useSocketOnlineStatus from '../hooks/useSocketOnlineStatus';
 import { RootStackParamList } from '../navigation/types';
+import {
+    getFriendList,
+    getFriendRequests,
+    getSentFriendRequests,
+} from '../services/apiFunctionFriend';
+import { getConversations } from '../services/conversationService';
 import useChatStore from '../stores/chatStore';
+import useFriendRequestsStore from '../stores/friendRequestsStore';
+import useFriendsStore from '../stores/friendsStore';
+import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
 
 const StyledView = styled(View);
 
@@ -81,6 +95,9 @@ export default function HomeScreen() {
     const navigation = useNavigation<NavigationProp>();
     const { setChat } = useChatStore();
     const [isMenuVisible, setIsMenuVisible] = useState(false);
+    const { setFriends } = useFriendsStore();
+    const { setFriendRequests } = useFriendRequestsStore();
+    const { setSentRequests } = useSentFriendRequestsStore();
 
     const handleMenuItemPress = (itemId: string) => {
         setIsMenuVisible(false);
@@ -95,6 +112,38 @@ export default function HomeScreen() {
             // ... xử lý các case khác
         }
     };
+
+    useSocketOnlineStatus();
+    useMessageSocket();
+    useFriendRequestSocket();
+    useConversationSocket();
+    useChat();
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const [
+                conversations,
+                friendRequests,
+                sentFriendRequests,
+                friendList,
+            ] = await Promise.allSettled([
+                getConversations(),
+                getFriendRequests(),
+                getSentFriendRequests(),
+                getFriendList(),
+            ]);
+
+            if (friendList.status === 'fulfilled') setFriends(friendList.value);
+            if (friendRequests.status === 'fulfilled')
+                setFriendRequests(friendRequests.value);
+            if (sentFriendRequests.status === 'fulfilled')
+                setSentRequests(sentFriendRequests.value);
+
+            console.log('conversations', conversations);
+        };
+
+        fetchData();
+    }, []);
 
     return (
         <StyledView className='flex-1 flex-row bg-gray-100'>

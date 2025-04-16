@@ -1,12 +1,11 @@
 import { useCallback } from 'react';
-import { Socket } from 'socket.io-client';
 import { useSocket } from '../contexts/SocketContext';
 
 type MessageCallback = (data: { message: string; roomId: string }) => void;
 type UserCallback = (userId: string) => void;
 
 export const useChat = () => {
-    const socket = useSocket() as typeof Socket;
+    const socket = useSocket();
 
     const sendMessage = useCallback(
         (message: string, roomId: string) => {

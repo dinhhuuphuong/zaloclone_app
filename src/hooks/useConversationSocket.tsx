@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Socket } from 'socket.io-client';
+import { useSocket } from '../contexts/SocketContext';
 import { getConversations } from '../services/conversationService';
+import useUserStore from '../stores/userStore';
 import { Conversation } from '../types/conversation';
 
-interface UseConversationSocketProps {
-    socket: typeof Socket | null;
-    userID: string | null;
-}
-
-const useConversationSocket = ({
-    socket,
-    userID,
-}: UseConversationSocketProps): Conversation[] => {
+const useConversationSocket = () => {
     const [conversationList, setConversationList] = useState<Conversation[]>(
         [],
     );
+    const socket = useSocket();
+    const { user } = useUserStore();
+    const userID = user?.userID;
 
     const fetchConversationList = async (): Promise<void> => {
         try {

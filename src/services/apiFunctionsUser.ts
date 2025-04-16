@@ -1,5 +1,5 @@
 import axiosInstance from '../configs/axiosClient';
-import { SearchUserByPhoneNumber } from '../types/User';
+import { SearchUserByPhoneNumber } from '../types/user';
 
 // Interface cho dữ liệu người dùng
 export interface IUser {

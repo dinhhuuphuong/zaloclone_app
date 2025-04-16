@@ -1,4 +1,4 @@
-import { IUserBase, SearchUserByPhoneNumber } from '../types/User';
+import { IUserBase, SearchUserByPhoneNumber } from '../types/user';
 
 export type RootStackParamList = {
     Home: undefined;

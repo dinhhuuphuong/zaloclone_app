@@ -1,43 +1,38 @@
-import { useEffect, useState } from 'react';
-import { Socket } from 'socket.io-client';
+import { useEffect } from 'react';
+import { useSocket } from '../contexts/SocketContext';
 import {
     getFriendRequests,
     getSentFriendRequests,
 } from '../services/apiFunctionFriend';
+import useFriendRequestsStore from '../stores/friendRequestsStore';
+import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
+import useUserStore from '../stores/userStore';
 
-interface FriendRequest {
-    id: string;
-    senderId: string;
-    receiverId: string;
-    status: string;
-    createdAt: string;
-    updatedAt: string;
-}
+const useFriendRequestSocket = () => {
+    const { setFriendRequests } = useFriendRequestsStore();
+    const { setSentRequests } = useSentFriendRequestsStore();
+    const socket = useSocket();
+    const { user } = useUserStore();
+    const userID = user?.userID;
 
-const useFriendRequestSocket = (
-    socket: typeof Socket | null,
-    userID: string | null,
-) => {
-    const [requestList, setRequestList] = useState<FriendRequest[]>([]);
     const fetchRequestList = async () => {
         try {
             const results = await getFriendRequests();
-            console.log('🚀 ~ fetchRequestList ~ results:', results);
+            setFriendRequests(results);
         } catch (error: any) {
             if (error.response?.data?.statusCode === 404) {
-                setRequestList([]);
+                setFriendRequests([]);
             }
         }
     };
 
-    const [sentRequestList, setSentRequestList] = useState<FriendRequest[]>([]);
     const fetchSentRequestList = async () => {
         try {
             const results = await getSentFriendRequests();
-            console.log('🚀 ~ fetchSentRequestList ~ results:', results);
+            setSentRequests(results);
         } catch (error: any) {
             if (error.response?.data?.statusCode === 404) {
-                setSentRequestList([]);
+                setSentRequests([]);
             }
         }
     };
@@ -70,8 +65,6 @@ const useFriendRequestSocket = (
             socket.off('friendRequestAccepted', handleFriendRequestAccepted);
         };
     }, [socket, userID]);
-
-    return { requestList, sentRequestList };
 };
 
 export default useFriendRequestSocket;
