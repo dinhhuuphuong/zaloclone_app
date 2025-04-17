@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+    Alert,
     FlatList,
     Image,
     StyleSheet,
@@ -7,30 +8,51 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import {
+    acceptFriendRequest,
+    declineFriendRequest,
+} from '../../services/apiFunctionFriend';
 import useFriendRequestsStore from '../../stores/friendRequestsStore';
+import useFriendsStore from '../../stores/friendsStore';
 import { IFriendRequest } from '../../types/friend';
+import { showError } from '../../utils';
 
 const ReceivedTab = () => {
     const { friendRequests, setFriendRequests } = useFriendRequestsStore();
+    const { friends, setFriends } = useFriendsStore();
 
-    const handleDecline = (id: string) => {
-        setFriendRequests(
-            friendRequests.map((request) =>
-                request.userID === id
-                    ? { ...request, status: 'declined' }
-                    : request,
-            ),
-        );
+    const handleDecline = async (user: IFriendRequest) => {
+        try {
+            await declineFriendRequest(user.userID);
+
+            setFriendRequests(
+                friendRequests.filter(
+                    (request) => request.userID !== user.userID,
+                ),
+            );
+
+            Alert.alert('Success', 'Đã từ chối lời mời kết bạn');
+        } catch (error) {
+            showError(error, 'Decline request failed');
+        }
     };
 
-    const handleAccept = (id: string) => {
-        setFriendRequests(
-            friendRequests.map((request) =>
-                request.userID === id
-                    ? { ...request, status: 'accepted' }
-                    : request,
-            ),
-        );
+    const handleAccept = async (user: IFriendRequest) => {
+        try {
+            await acceptFriendRequest(user.userID);
+
+            setFriendRequests(
+                friendRequests.filter(
+                    (request) => request.userID !== user.userID,
+                ),
+            );
+
+            setFriends([...friends, user]);
+
+            Alert.alert('Success', 'Đã chấp nhận lời mời kết bạn');
+        } catch (error) {
+            showError(error, 'Decline request failed');
+        }
     };
 
     const renderFriendRequest = ({ item }: { item: IFriendRequest }) => {
@@ -43,7 +65,7 @@ const ReceivedTab = () => {
                     <View style={styles.actionButtons}>
                         <TouchableOpacity
                             style={styles.declineButton}
-                            onPress={() => handleDecline(item.userID)}
+                            onPress={() => handleDecline(item)}
                         >
                             <Text style={styles.declineButtonText}>
                                 Decline
@@ -51,7 +73,7 @@ const ReceivedTab = () => {
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.acceptButton}
-                            onPress={() => handleAccept(item.userID)}
+                            onPress={() => handleAccept(item)}
                         >
                             <Text style={styles.acceptButtonText}>Accept</Text>
                         </TouchableOpacity>
