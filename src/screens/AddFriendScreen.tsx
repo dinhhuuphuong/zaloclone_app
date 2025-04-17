@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
 import { sendFriendRequest } from '../services/apiFunctionFriend';
+import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
 import useUserStore from '../stores/userStore';
 import { showError } from '../utils';
 
@@ -29,6 +30,7 @@ export default function AddFriendScreen() {
     const [message, setMessage] = useState(
         `Hi, I'm ${user?.fullName}. I've got your phone number`,
     );
+    const { sentRequests, setSentRequests } = useSentFriendRequestsStore();
 
     const toggleSwitch = () => setIsBlocked((previousState) => !previousState);
 
@@ -39,6 +41,9 @@ export default function AddFriendScreen() {
     const handleSendRequest = async () => {
         try {
             await sendFriendRequest(userInfo.userID);
+
+            setSentRequests([...sentRequests, userInfo]);
+
             navigation.goBack();
         } catch (error) {
             showError(error, 'Send request failed');

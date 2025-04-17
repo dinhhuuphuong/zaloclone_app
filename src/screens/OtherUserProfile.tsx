@@ -14,9 +14,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
+import { cancelFriendRequest } from '../services/apiFunctionFriend';
 import useFriendRequestsStore from '../stores/friendRequestsStore';
 import useFriendsStore from '../stores/friendsStore';
 import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
+import { showError } from '../utils';
 
 // Define types for suggested friends
 type SuggestedFriend = {
@@ -35,7 +37,7 @@ const FRIEND = 3;
 
 export default function OtherUserProfile() {
     const { friends } = useFriendsStore();
-    const { sentRequests } = useSentFriendRequestsStore();
+    const { sentRequests, setSentRequests } = useSentFriendRequestsStore();
     const { friendRequests } = useFriendRequestsStore();
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<RouteProps>();
@@ -91,6 +93,18 @@ export default function OtherUserProfile() {
 
     const handleAccept = () => {
         console.log('Accept');
+    };
+
+    const handleRecall = async (id: string) => {
+        try {
+            await cancelFriendRequest(id);
+
+            setSentRequests(
+                sentRequests.filter((request) => request.userID !== id),
+            );
+        } catch (error) {
+            showError(error, 'Recall request failed');
+        }
     };
 
     return (
@@ -173,6 +187,7 @@ export default function OtherUserProfile() {
                         {relationshipStatus === SENT && (
                             <TouchableOpacity
                                 style={styles.recallRequestButton}
+                                onPress={() => handleRecall(userInfo.userID)}
                             >
                                 <Text style={styles.recallRequestButtonText}>
                                     Recall request

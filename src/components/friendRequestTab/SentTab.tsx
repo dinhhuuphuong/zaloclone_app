@@ -7,20 +7,24 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { cancelFriendRequest } from '../../services/apiFunctionFriend';
 import useSentFriendRequestsStore from '../../stores/sentFriendRequestsStore';
 import { IFriendRequest } from '../../types/friend';
+import { showError } from '../../utils';
 
 const SentTab = () => {
     const { sentRequests, setSentRequests } = useSentFriendRequestsStore();
 
-    const handleRecall = (id: string) => {
-        setSentRequests(
-            sentRequests.map((request) =>
-                request.userID === id
-                    ? { ...request, status: 'recalled' }
-                    : request,
-            ),
-        );
+    const handleRecall = async (id: string) => {
+        try {
+            await cancelFriendRequest(id);
+
+            setSentRequests(
+                sentRequests.filter((request) => request.userID !== id),
+            );
+        } catch (error) {
+            showError(error, 'Recall request failed');
+        }
     };
 
     const renderSentRequest = ({ item }: { item: IFriendRequest }) => {

@@ -1,4 +1,4 @@
-import { IUserBase, SearchUserByPhoneNumber } from '../types/user';
+import { SearchUserByPhoneNumber } from '../types/user';
 
 export type RootStackParamList = {
     Home: undefined;
@@ -12,7 +12,7 @@ export type RootStackParamList = {
     ForgotPassword: undefined;
     UpdatePassword: undefined;
     AddFriends: undefined;
-    AddFriend: IUserBase;
+    AddFriend: SearchUserByPhoneNumber;
     OtherUserProfile: SearchUserByPhoneNumber;
     FriendRequests: undefined;
 };
