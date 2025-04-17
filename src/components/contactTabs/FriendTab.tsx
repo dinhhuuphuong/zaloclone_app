@@ -11,6 +11,10 @@ import {
     View,
 } from 'react-native';
 import { RootStackParamList } from '../../navigation/types';
+import useFriendRequestsStore from '../../stores/friendRequestsStore';
+import useFriendsStore from '../../stores/friendsStore';
+import useSentFriendRequestsStore from '../../stores/sentFriendRequestsStore';
+import { IFriendRequest } from '../../types/friend';
 
 type Section = {
     id: string;
@@ -21,13 +25,6 @@ type Section = {
     onPress?: () => void;
 };
 
-type Contact = {
-    id: string;
-    name: string;
-    avatar: string;
-    firstLetter: string;
-};
-
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'FriendRequests'>;
@@ -35,6 +32,13 @@ type NavigationProp = StackNavigationProp<RootStackParamList, 'FriendRequests'>;
 const FriendTab = () => {
     const [activeFilter, setActiveFilter] = useState('All');
     const navigation = useNavigation<NavigationProp>();
+    const { friends } = useFriendsStore();
+    const { friendRequests } = useFriendRequestsStore();
+    const { sentRequests } = useSentFriendRequestsStore();
+
+    const handleToChatScreen = () => {
+        navigation.navigate('Chat');
+    };
 
     const handleNavigateToFriendRequests = () => {
         navigation.navigate('FriendRequests');
@@ -50,7 +54,7 @@ const FriendTab = () => {
                     <Ionicons name='people' size={24} color='white' />
                 </View>
             ),
-            badge: '22',
+            badge: (friendRequests.length + sentRequests.length).toString(),
             onPress: handleNavigateToFriendRequests,
         },
         {
@@ -74,22 +78,17 @@ const FriendTab = () => {
         },
     ];
 
-    // Sample contacts data
-    const contacts: Contact[] = [
-        { id: '1', name: 'Anh Nhật', avatar: '', firstLetter: 'A' },
-        { id: '2', name: 'Anh Thắng', avatar: '', firstLetter: 'A' },
-        { id: '3', name: 'Ánh Nguyệt', avatar: '', firstLetter: 'A' },
-        { id: '4', name: 'Bảo Thanh 🐞 Nguyễn', avatar: '', firstLetter: 'B' },
-        // Add more contacts as needed
-    ];
-
     // Group contacts by first letter
-    const groupedContacts: { [key: string]: Contact[] } = {};
-    contacts.forEach((contact) => {
-        if (!groupedContacts[contact.firstLetter]) {
-            groupedContacts[contact.firstLetter] = [];
+    const groupedContacts: {
+        [key: string]: IFriendRequest[];
+    } = {};
+
+    friends.forEach((contact) => {
+        const firstLetter = contact.fullName.charAt(0).toUpperCase();
+        if (!groupedContacts[firstLetter]) {
+            groupedContacts[firstLetter] = [];
         }
-        groupedContacts[contact.firstLetter].push(contact);
+        groupedContacts[firstLetter].push(contact);
     });
 
     // Create sections for FlatList
@@ -136,7 +135,7 @@ const FriendTab = () => {
                     ]}
                     onPress={() => setActiveFilter('All')}
                 >
-                    <Text style={styles.filterText}>All 159</Text>
+                    <Text style={styles.filterText}>All {friends.length}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[
@@ -154,7 +153,11 @@ const FriendTab = () => {
                 <View key={section.title}>
                     <Text style={styles.sectionHeader}>{section.title}</Text>
                     {section.data.map((contact) => (
-                        <View key={contact.id} style={styles.contactItem}>
+                        <TouchableOpacity
+                            key={contact.userID}
+                            style={styles.contactItem}
+                            onPress={handleToChatScreen}
+                        >
                             <Image
                                 source={{
                                     uri:
@@ -164,7 +167,7 @@ const FriendTab = () => {
                                 style={styles.avatar}
                             />
                             <Text style={styles.contactName}>
-                                {contact.name}
+                                {contact.fullName}
                             </Text>
                             <View style={styles.contactActions}>
                                 <TouchableOpacity style={styles.actionButton}>
@@ -182,7 +185,7 @@ const FriendTab = () => {
                                     />
                                 </TouchableOpacity>
                             </View>
-                        </View>
+                        </TouchableOpacity>
                     ))}
                 </View>
             ))}
