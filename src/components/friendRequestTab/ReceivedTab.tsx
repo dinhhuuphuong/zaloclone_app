@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     FlatList,
     Image,
@@ -7,64 +7,16 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-
-type FriendRequest = {
-    id: string;
-    name: string;
-    avatar: string;
-    status: 'pending' | 'accepted' | 'declined';
-};
+import useFriendRequestsStore from '../../stores/friendRequestsStore';
+import { IFriendRequest } from '../../types/friend';
 
 const ReceivedTab = () => {
-    const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([
-        {
-            id: '1',
-            name: 'Quốc Duy',
-            avatar: 'https://via.placeholder.com/100',
-            status: 'pending',
-        },
-        {
-            id: '2',
-            name: 'Hương Nguyễn',
-            avatar: 'https://via.placeholder.com/100',
-            status: 'pending',
-        },
-        {
-            id: '3',
-            name: 'Ung Nho Phú',
-            avatar: 'https://via.placeholder.com/100',
-            status: 'pending',
-        },
-        {
-            id: '4',
-            name: 'Nguyễn Minh Ân',
-            avatar: 'https://via.placeholder.com/100',
-            status: 'pending',
-        },
-        {
-            id: '5',
-            name: 'Hào Thanh',
-            avatar: 'https://via.placeholder.com/100',
-            status: 'pending',
-        },
-        {
-            id: '6',
-            name: 'Nguyễn Việt Hùng',
-            avatar: 'https://via.placeholder.com/100',
-            status: 'pending',
-        },
-        {
-            id: '7',
-            name: 'Chí Cường',
-            avatar: 'https://via.placeholder.com/100',
-            status: 'pending',
-        },
-    ]);
+    const { friendRequests, setFriendRequests } = useFriendRequestsStore();
 
     const handleDecline = (id: string) => {
         setFriendRequests(
             friendRequests.map((request) =>
-                request.id === id
+                request.userID === id
                     ? { ...request, status: 'declined' }
                     : request,
             ),
@@ -74,26 +26,24 @@ const ReceivedTab = () => {
     const handleAccept = (id: string) => {
         setFriendRequests(
             friendRequests.map((request) =>
-                request.id === id
+                request.userID === id
                     ? { ...request, status: 'accepted' }
                     : request,
             ),
         );
     };
 
-    const renderFriendRequest = ({ item }: { item: FriendRequest }) => {
-        if (item.status !== 'pending') return null;
-
+    const renderFriendRequest = ({ item }: { item: IFriendRequest }) => {
         return (
             <View style={styles.requestItem}>
                 <Image source={{ uri: item.avatar }} style={styles.avatar} />
                 <View style={styles.requestInfo}>
-                    <Text style={styles.name}>{item.name}</Text>
+                    <Text style={styles.name}>{item.fullName}</Text>
                     <Text style={styles.requestText}>Wants to be friends</Text>
                     <View style={styles.actionButtons}>
                         <TouchableOpacity
                             style={styles.declineButton}
-                            onPress={() => handleDecline(item.id)}
+                            onPress={() => handleDecline(item.userID)}
                         >
                             <Text style={styles.declineButtonText}>
                                 Decline
@@ -101,7 +51,7 @@ const ReceivedTab = () => {
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.acceptButton}
-                            onPress={() => handleAccept(item.id)}
+                            onPress={() => handleAccept(item.userID)}
                         >
                             <Text style={styles.acceptButtonText}>Accept</Text>
                         </TouchableOpacity>
@@ -115,7 +65,7 @@ const ReceivedTab = () => {
         <FlatList
             data={friendRequests}
             renderItem={renderFriendRequest}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.userID}
             contentContainerStyle={styles.listContent}
         />
     );

@@ -13,14 +13,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import ReceivedTab from '../components/friendRequestTab/ReceivedTab';
 import SentTab from '../components/friendRequestTab/SentTab';
 import { RootStackParamList } from '../navigation/types';
+import useFriendRequestsStore from '../stores/friendRequestsStore';
+import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
 
 type TabType = 'received' | 'sent';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'FriendRequests'>;
 
 export default function FriendRequestsScreen() {
-    const [activeTab, setActiveTab] = useState<TabType>('sent');
+    const [activeTab, setActiveTab] = useState<TabType>('received');
     const navigation = useNavigation<NavigationProp>();
+    const { friendRequests } = useFriendRequestsStore();
+    const { sentRequests } = useSentFriendRequestsStore();
 
     const handleBackButton = () => {
         navigation.goBack();
@@ -57,7 +61,7 @@ export default function FriendRequestsScreen() {
                             activeTab === 'received' && styles.activeTabText,
                         ]}
                     >
-                        Received 22
+                        Received {friendRequests.length}
                     </Text>
                 </Pressable>
                 <Pressable
@@ -73,7 +77,7 @@ export default function FriendRequestsScreen() {
                             activeTab === 'sent' && styles.activeTabText,
                         ]}
                     >
-                        Sent 5
+                        Sent {sentRequests.length}
                     </Text>
                 </Pressable>
             </View>

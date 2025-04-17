@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     FlatList,
     Image,
@@ -7,88 +7,38 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-
-type SentRequest = {
-    id: string;
-    name: string;
-    avatar: string;
-    source: string;
-    timeInfo: string;
-    status: 'sent' | 'recalled';
-};
+import useSentFriendRequestsStore from '../../stores/sentFriendRequestsStore';
+import { IFriendRequest } from '../../types/friend';
 
 const SentTab = () => {
-    const [sentRequests, setSentRequests] = useState<SentRequest[]>([
-        {
-            id: '1',
-            name: 'Út',
-            avatar: 'https://via.placeholder.com/100',
-            source: 'From chat conversation',
-            timeInfo: '17 minutes ago',
-            status: 'sent',
-        },
-        {
-            id: '2',
-            name: 'Dương Đức Duy',
-            avatar: 'https://via.placeholder.com/100',
-            source: 'From Mutual group',
-            timeInfo: '05/03',
-            status: 'sent',
-        },
-        {
-            id: '3',
-            name: 'Giang',
-            avatar: 'https://via.placeholder.com/100',
-            source: 'From chat conversation',
-            timeInfo: '18/02',
-            status: 'sent',
-        },
-        {
-            id: '4',
-            name: 'Thu Ha',
-            avatar: 'https://via.placeholder.com/100',
-            source: 'People you may know',
-            timeInfo: '',
-            status: 'sent',
-        },
-        {
-            id: '5',
-            name: 'Sim Minh Ngoc',
-            avatar: 'https://via.placeholder.com/100',
-            source: 'People you may know',
-            timeInfo: '',
-            status: 'sent',
-        },
-    ]);
+    const { sentRequests, setSentRequests } = useSentFriendRequestsStore();
 
     const handleRecall = (id: string) => {
         setSentRequests(
             sentRequests.map((request) =>
-                request.id === id
+                request.userID === id
                     ? { ...request, status: 'recalled' }
                     : request,
             ),
         );
     };
 
-    const renderSentRequest = ({ item }: { item: SentRequest }) => {
-        if (item.status !== 'sent') return null;
-
+    const renderSentRequest = ({ item }: { item: IFriendRequest }) => {
         return (
             <View style={styles.requestItem}>
                 <Image source={{ uri: item.avatar }} style={styles.avatar} />
                 <View style={styles.requestInfo}>
-                    <Text style={styles.name}>{item.name}</Text>
-                    <View style={styles.sourceContainer}>
+                    <Text style={styles.name}>{item.fullName}</Text>
+                    {/* <View style={styles.sourceContainer}>
                         <Text style={styles.sourceText}>{item.source}</Text>
                         {item.timeInfo ? (
                             <Text style={styles.timeInfo}>{item.timeInfo}</Text>
                         ) : null}
-                    </View>
+                    </View> */}
                 </View>
                 <TouchableOpacity
                     style={styles.recallButton}
-                    onPress={() => handleRecall(item.id)}
+                    onPress={() => handleRecall(item.userID)}
                 >
                     <Text style={styles.recallButtonText}>Recall</Text>
                 </TouchableOpacity>
@@ -100,7 +50,7 @@ const SentTab = () => {
         <FlatList
             data={sentRequests}
             renderItem={renderSentRequest}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.userID}
             contentContainerStyle={styles.listContent}
         />
     );

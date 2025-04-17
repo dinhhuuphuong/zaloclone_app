@@ -134,10 +134,13 @@ export default function HomeScreen() {
             ]);
 
             if (friendList.status === 'fulfilled') setFriends(friendList.value);
+            else setFriends([]);
             if (friendRequests.status === 'fulfilled')
                 setFriendRequests(friendRequests.value);
+            else setFriendRequests([]);
             if (sentFriendRequests.status === 'fulfilled')
                 setSentRequests(sentFriendRequests.value);
+            else setSentRequests([]);
 
             console.log('conversations', conversations);
         };
