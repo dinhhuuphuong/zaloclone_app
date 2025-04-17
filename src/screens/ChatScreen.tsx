@@ -8,7 +8,7 @@ import {
 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import {
     Image,
     KeyboardAvoidingView,
@@ -21,9 +21,14 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { sendTextMessage } from '../services/messageService';
+import {
+    getMessagesByConversation,
+    sendTextMessage,
+} from '../services/messageService';
 import useChatStore from '../stores/chatStore';
+import useMessagesStore from '../stores/messagesStore';
 import useUserOnlineStore from '../stores/userOnlineStore';
+import { parseTimestamp } from '../utils';
 
 // Define types for our messages
 type MessageType = {
@@ -48,94 +53,38 @@ export default function ChatScreen() {
     const { chat } = useChatStore();
     const { userOnline } = useUserOnlineStore();
     const isOnline = userOnline?.userIds.includes(chat?.userID ?? '');
+    const { conversations, setMessages } = useMessagesStore();
+    const messages = conversations[chat?.conversationID ?? ''] ?? [];
 
     const handleMessageChange = (text: string) => {
         setMessage(text);
         setShowSendButton(text.trim().length > 0);
     };
 
-    // Sample messages data
-    const messages: MessageType[] = [
-        {
-            id: '1',
-            text: 'Chứ m muốn sao nữa ba',
-            time: '17:47',
-            isUser: false,
-        },
-        {
-            id: '2',
-            text: 'nó đó',
-            time: '17:49',
-            isUser: true,
-        },
-        {
-            id: '3',
-            text: 'thì nó đó',
-            time: '17:49',
-            isUser: true,
-        },
-        {
-            id: '4',
-            isSticker: true,
-            stickerUrl: 'https://via.placeholder.com/150',
-            time: '17:49',
-            isUser: true,
-        },
-        {
-            id: '5',
-            text: '',
-            time: '',
-            date: '22:47 14/04/2025',
-            isUser: false,
-        },
-        {
-            id: '6',
-            text: 'tạo cuộc hội thoại bằng cái api nào á Thảo?',
-            time: '',
-            isUser: true,
-        },
-        {
-            id: '7',
-            text: '',
-            time: '',
-            date: '23:21 14/04/2025',
-            isUser: false,
-        },
-        {
-            id: '8',
-            text: 'ê, sáng mai cho t xin lịch vô meet đi',
-            time: '',
-            isUser: true,
-        },
-        {
-            id: '9',
-            text: '',
-            time: '',
-            date: '07:33 Yesterday',
-            isUser: false,
-        },
-        {
-            id: '10',
-            text: 'phần chat fe t có code r mà',
-            time: '',
-            isUser: false,
-            reactions: [{ type: 'heart', count: 1 }],
-            status: 'delivered',
-        },
-    ];
-
     const handleSendTextMessage = async () => {
         if (!message.trim()) return;
 
         try {
-            const response = await sendTextMessage(chat?.userID ?? '', message);
+            await sendTextMessage(chat?.userID ?? '', message);
             setMessage('');
-
-            console.log('response', response);
         } catch (err) {
             console.error('Lỗi khi gửi tin nhắn:', err);
         }
     };
+
+    useEffect(() => {
+        const fetchMessages = async () => {
+            if (!chat?.conversationID) return;
+
+            const response = await getMessagesByConversation(
+                chat.conversationID,
+            );
+
+            setMessages(chat.conversationID, [...response].reverse());
+        };
+
+        fetchMessages();
+    }, [chat?.conversationID]);
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
@@ -184,29 +133,17 @@ export default function ChatScreen() {
                 contentContainerStyle={styles.messagesContent}
             >
                 {messages.map((msg) => {
-                    if (msg.date) {
-                        return (
-                            <View key={msg.id} style={styles.dateContainer}>
-                                <View style={styles.dateWrapper}>
-                                    <Text style={styles.dateText}>
-                                        {msg.date}
-                                    </Text>
-                                </View>
-                            </View>
-                        );
-                    }
-
                     return (
                         <View
-                            key={msg.id}
+                            key={msg.messageID}
                             style={[
                                 styles.messageRow,
-                                msg.isUser
+                                msg.senderID === chat?.userID
                                     ? styles.userMessageRow
                                     : styles.contactMessageRow,
                             ]}
                         >
-                            {msg.isUser && (
+                            {msg.senderID === chat?.userID && (
                                 <Image
                                     source={{
                                         uri: 'https://via.placeholder.com/40',
@@ -217,56 +154,27 @@ export default function ChatScreen() {
                             <View
                                 style={[
                                     styles.messageContainer,
-                                    msg.isUser
+                                    msg.senderID === chat?.userID
                                         ? styles.userMessage
                                         : styles.contactMessage,
                                 ]}
                             >
-                                {msg.isSticker ? (
+                                {msg.messageType === 'sticker' ? (
                                     <Text style={styles.messageText}>
                                         Sticker
                                     </Text>
                                 ) : (
                                     <Text style={styles.messageText}>
-                                        {msg.text}
+                                        {msg.messageContent}
                                     </Text>
                                 )}
-                                {msg.time && (
-                                    <Text style={styles.timeText}>
-                                        {msg.time}
-                                    </Text>
-                                )}
-                                {msg.reactions && (
-                                    <View style={styles.reactionContainer}>
-                                        <Text style={styles.reactionText}>
-                                            ❤️ {msg.reactions[0].count}
-                                        </Text>
-                                    </View>
-                                )}
+                                <Text style={styles.timeText}>
+                                    {parseTimestamp(msg.createdAt)}
+                                </Text>
                             </View>
-                            {!msg.isUser && msg.reactions && (
-                                <TouchableOpacity style={styles.heartButton}>
-                                    <Ionicons
-                                        name='heart-outline'
-                                        size={20}
-                                        color='#666'
-                                    />
-                                </TouchableOpacity>
-                            )}
                         </View>
                     );
                 })}
-                {/* Status indicator */}
-                <View style={styles.statusContainer}>
-                    <Text style={styles.statusText}>
-                        <Ionicons
-                            name='checkmark-done'
-                            size={14}
-                            color='#8e8e8e'
-                        />{' '}
-                        Delivered
-                    </Text>
-                </View>
             </ScrollView>
 
             {/* Input Area */}

@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import { RootStackParamList } from '../../navigation/types';
+import { haveTheyChatted } from '../../services/conversationService';
 import useChatStore from '../../stores/chatStore';
 import useFriendRequestsStore from '../../stores/friendRequestsStore';
 import useFriendsStore from '../../stores/friendsStore';
@@ -38,8 +39,15 @@ const FriendTab = () => {
     const { sentRequests } = useSentFriendRequestsStore();
     const { setChat } = useChatStore();
 
-    const handleToChatScreen = (user: IFriendRequest) => {
-        setChat(user);
+    const handleToChatScreen = async (user: IFriendRequest) => {
+        const response = await haveTheyChatted(user.userID);
+
+        setChat({
+            ...user,
+            conversationID: response
+                ? response.convDetails.conversationID
+                : undefined,
+        });
         navigation.navigate('Chat');
     };
 

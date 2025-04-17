@@ -18,6 +18,7 @@ interface MessagesStore {
         [key: string]: IMessage[];
     };
     setMessages: (conversationId: string, messages: IMessage[]) => void;
+    setMessage: (conversationId: string, message: IMessage) => void;
 }
 
 const useMessagesStore = create<MessagesStore>((set) => ({
@@ -27,6 +28,16 @@ const useMessagesStore = create<MessagesStore>((set) => ({
             conversations: {
                 ...prev.conversations,
                 [conversationId]: messages,
+            },
+        })),
+    setMessage: (conversationId: string, message: IMessage) =>
+        set((prev) => ({
+            conversations: {
+                ...prev.conversations,
+                [conversationId]: [
+                    message,
+                    ...prev.conversations[conversationId],
+                ],
             },
         })),
 }));

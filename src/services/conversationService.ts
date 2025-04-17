@@ -6,6 +6,19 @@ interface User {
     id: string;
 }
 
+export interface IHaveTheyChatted {
+    convDetails: ConvDetails;
+}
+
+export interface ConvDetails {
+    createdAt: number;
+    conversationID: string;
+    destroy: boolean;
+    lastMessageID: string;
+    userID: string;
+    updatedAt: number;
+}
+
 export const getConversations = async (): Promise<IConversation[]> => {
     try {
         const response = await axiosInstance.get<IConversation[]>(
@@ -32,9 +45,11 @@ export const getReceiver = async (
     }
 };
 
-export const haveTheyChatted = async (userID: string): Promise<boolean> => {
+export const haveTheyChatted = async (
+    userID: string,
+): Promise<IHaveTheyChatted> => {
     try {
-        const response = await axiosInstance.get<boolean>(
+        const response = await axiosInstance.get<IHaveTheyChatted>(
             `/conversations/haveTheyChatted/${userID}`,
         );
         return response.data;

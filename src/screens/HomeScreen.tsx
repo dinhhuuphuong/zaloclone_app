@@ -215,7 +215,11 @@ export default function HomeScreen() {
                             onPress={() => {
                                 if (!item.conversation.receiver) return;
 
-                                setChat(item.conversation.receiver);
+                                setChat({
+                                    ...item.conversation.receiver,
+                                    conversationID:
+                                        item.conversation.conversationID,
+                                });
                                 navigation.navigate('Chat');
                             }}
                         >
