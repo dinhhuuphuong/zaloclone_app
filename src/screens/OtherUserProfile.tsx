@@ -1,6 +1,7 @@
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useMemo } from 'react';
 import {
     Dimensions,
     Image,
@@ -13,6 +14,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
+import useFriendRequestsStore from '../stores/friendRequestsStore';
+import useFriendsStore from '../stores/friendsStore';
+import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
 
 // Define types for suggested friends
 type SuggestedFriend = {
@@ -24,10 +28,39 @@ type SuggestedFriend = {
 type NavigationProp = StackNavigationProp<RootStackParamList, 'AddFriend'>;
 type RouteProps = RouteProp<RootStackParamList, 'OtherUserProfile'>;
 
+const NOT_FRIEND = 0;
+const SENT = 1;
+const RECEIVED = 2;
+const FRIEND = 3;
+
 export default function OtherUserProfile() {
+    const { friends } = useFriendsStore();
+    const { sentRequests } = useSentFriendRequestsStore();
+    const { friendRequests } = useFriendRequestsStore();
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<RouteProps>();
     const userInfo = route.params;
+    const relationshipStatus = useMemo(() => {
+        const isFriend = friends.some(
+            (friend) => friend.userID === userInfo.userID,
+        );
+
+        if (isFriend) return FRIEND;
+
+        const isSentRequest = sentRequests.some(
+            (request) => request.userID === userInfo.userID,
+        );
+
+        if (isSentRequest) return SENT;
+
+        const isReceivedRequest = friendRequests.some(
+            (request) => request.userID === userInfo.userID,
+        );
+
+        if (isReceivedRequest) return RECEIVED;
+
+        return NOT_FRIEND;
+    }, [friends, sentRequests, friendRequests, userInfo.userID]);
 
     // Sample data for suggested friends
     const suggestedFriends: SuggestedFriend[] = [
@@ -50,6 +83,14 @@ export default function OtherUserProfile() {
 
     const handleBack = () => {
         navigation.goBack();
+    };
+
+    const handleDecline = () => {
+        console.log('Decline');
+    };
+
+    const handleAccept = () => {
+        console.log('Accept');
     };
 
     return (
@@ -129,23 +170,70 @@ export default function OtherUserProfile() {
                                 Send message
                             </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.addFriendButton}
-                            onPress={() =>
-                                navigation.navigate('AddFriend', userInfo)
-                            }
-                        >
-                            <Ionicons
-                                name='person-add'
-                                size={24}
-                                color='#666'
-                            />
-                        </TouchableOpacity>
+                        {relationshipStatus === SENT && (
+                            <TouchableOpacity
+                                style={styles.recallRequestButton}
+                            >
+                                <Text style={styles.recallRequestButtonText}>
+                                    Recall request
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                        {relationshipStatus === NOT_FRIEND && (
+                            <TouchableOpacity
+                                style={styles.addFriendButton}
+                                onPress={() =>
+                                    navigation.navigate('AddFriend', userInfo)
+                                }
+                            >
+                                <Ionicons
+                                    name='person-add'
+                                    size={24}
+                                    color='#666'
+                                />
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
 
                 {/* Divider */}
                 <View style={styles.divider} />
+
+                {relationshipStatus === RECEIVED && (
+                    <View style={styles.friendRequestCard}>
+                        <Text style={styles.requestTitle}>
+                            Sent friend request
+                        </Text>
+                        <View style={styles.zaloNameContainer}>
+                            <Ionicons
+                                name='person-circle-outline'
+                                size={20}
+                                color='#666'
+                            />
+                            <Text style={styles.zaloNameText}>
+                                Zalo name: {userInfo.fullName}
+                            </Text>
+                        </View>
+                        <View style={styles.requestButtons}>
+                            <TouchableOpacity
+                                style={styles.declineButton}
+                                onPress={handleDecline}
+                            >
+                                <Text style={styles.declineButtonText}>
+                                    Decline
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.acceptButton}
+                                onPress={handleAccept}
+                            >
+                                <Text style={styles.acceptButtonText}>
+                                    Accept
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
 
                 {/* Friend Suggestions */}
                 <View style={styles.suggestionsContainer}>
@@ -305,6 +393,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    recallRequestButton: {
+        borderRadius: 22.5,
+        backgroundColor: '#f0f0f0',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+    },
+    recallRequestButtonText: {
+        color: '#666',
+        fontWeight: '500',
+    },
     divider: {
         height: 8,
         backgroundColor: '#f0f0f0',
@@ -369,6 +469,60 @@ const styles = StyleSheet.create({
     },
     addButtonText: {
         color: '#0084ff',
+        fontWeight: '500',
+    },
+    friendRequestCard: {
+        backgroundColor: 'white',
+        borderRadius: 12,
+        marginHorizontal: 20,
+        marginTop: 20,
+        padding: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    requestTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 10,
+    },
+    zaloNameContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    zaloNameText: {
+        fontSize: 14,
+        color: '#666',
+        marginLeft: 8,
+    },
+    requestButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    declineButton: {
+        flex: 1,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 20,
+        paddingVertical: 12,
+        alignItems: 'center',
+        marginRight: 10,
+    },
+    declineButtonText: {
+        color: '#333',
+        fontWeight: '500',
+    },
+    acceptButton: {
+        flex: 1,
+        backgroundColor: '#0084ff',
+        borderRadius: 20,
+        paddingVertical: 12,
+        alignItems: 'center',
+    },
+    acceptButtonText: {
+        color: 'white',
         fontWeight: '500',
     },
 });
