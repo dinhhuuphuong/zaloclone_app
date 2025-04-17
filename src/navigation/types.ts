@@ -14,4 +14,5 @@ export type RootStackParamList = {
     AddFriends: undefined;
     AddFriend: IUserBase;
     OtherUserProfile: SearchUserByPhoneNumber;
+    FriendRequests: undefined;
 };

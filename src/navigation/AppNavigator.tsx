@@ -6,6 +6,7 @@ import AddFriendScreen from '../screens/AddFriendScreen';
 import AddFriendsScreen from '../screens/AddFriendsScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ForgotPassword from '../screens/ForgotPassword';
+import FriendRequestsScreen from '../screens/FriendRequestsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import OtherUserProfile from '../screens/OtherUserProfile';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -76,6 +77,10 @@ const AppNavigator = () => {
                 <Stack.Screen
                     name='OtherUserProfile'
                     component={OtherUserProfile}
+                />
+                <Stack.Screen
+                    name='FriendRequests'
+                    component={FriendRequestsScreen}
                 />
             </Stack.Navigator>
         </NavigationContainer>

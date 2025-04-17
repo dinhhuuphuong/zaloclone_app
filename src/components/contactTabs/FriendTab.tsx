@@ -1,4 +1,6 @@
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import React, { useState } from 'react';
 import {
     Image,
@@ -8,12 +10,15 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { RootStackParamList } from '../../navigation/types';
 
 type Section = {
+    id: string;
     title: string;
     icon: React.ReactNode;
     subtitle?: string;
     badge?: string;
+    onPress?: () => void;
 };
 
 type Contact = {
@@ -25,12 +30,20 @@ type Contact = {
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
+type NavigationProp = StackNavigationProp<RootStackParamList, 'FriendRequests'>;
+
 const FriendTab = () => {
     const [activeFilter, setActiveFilter] = useState('All');
+    const navigation = useNavigation<NavigationProp>();
+
+    const handleNavigateToFriendRequests = () => {
+        navigation.navigate('FriendRequests');
+    };
 
     // Sample data
     const sections: Section[] = [
         {
+            id: '1',
             title: 'Friend requests',
             icon: (
                 <View style={styles.iconContainer}>
@@ -38,8 +51,10 @@ const FriendTab = () => {
                 </View>
             ),
             badge: '22',
+            onPress: handleNavigateToFriendRequests,
         },
         {
+            id: '2',
             title: 'Phonebook',
             icon: (
                 <View style={styles.iconContainer}>
@@ -49,6 +64,7 @@ const FriendTab = () => {
             subtitle: 'Contacts who use Zalo',
         },
         {
+            id: '3',
             title: 'Birthdays',
             icon: (
                 <View style={styles.iconContainer}>
@@ -78,7 +94,7 @@ const FriendTab = () => {
 
     // Create sections for FlatList
     const contactSections = Object.keys(groupedContacts)
-        .sort()
+        .sort((a, b) => a.localeCompare(b))
         .map((letter) => ({
             title: letter,
             data: groupedContacts[letter],
@@ -86,8 +102,12 @@ const FriendTab = () => {
 
     return (
         <ScrollView style={styles.content}>
-            {sections.map((section, index) => (
-                <TouchableOpacity key={index} style={styles.sectionItem}>
+            {sections.map((section) => (
+                <TouchableOpacity
+                    key={section.id}
+                    style={styles.sectionItem}
+                    onPress={section.onPress}
+                >
                     {section.icon}
                     <View style={styles.sectionTextContainer}>
                         <Text style={styles.sectionTitle}>{section.title}</Text>
