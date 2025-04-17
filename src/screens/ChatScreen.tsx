@@ -8,7 +8,7 @@ import {
 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import {
     Image,
     KeyboardAvoidingView,
@@ -21,6 +21,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { sendTextMessage } from '../services/messageService';
 import useChatStore from '../stores/chatStore';
 import useUserOnlineStore from '../stores/userOnlineStore';
 
@@ -42,10 +43,16 @@ type MessageType = {
 
 export default function ChatScreen() {
     const [message, setMessage] = useState('');
+    const [showSendButton, setShowSendButton] = useState(false);
     const navigation = useNavigation();
     const { chat } = useChatStore();
     const { userOnline } = useUserOnlineStore();
     const isOnline = userOnline?.userIds.includes(chat?.userID ?? '');
+
+    const handleMessageChange = (text: string) => {
+        setMessage(text);
+        setShowSendButton(text.trim().length > 0);
+    };
 
     // Sample messages data
     const messages: MessageType[] = [
@@ -116,6 +123,19 @@ export default function ChatScreen() {
             status: 'delivered',
         },
     ];
+
+    const handleSendTextMessage = async () => {
+        if (!message.trim()) return;
+
+        try {
+            const response = await sendTextMessage(chat?.userID ?? '', message);
+            setMessage('');
+
+            console.log('response', response);
+        } catch (err) {
+            console.error('Lỗi khi gửi tin nhắn:', err);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
@@ -267,18 +287,41 @@ export default function ChatScreen() {
                     placeholder='Message'
                     placeholderTextColor='#999'
                     value={message}
-                    onChangeText={setMessage}
+                    onChangeText={handleMessageChange}
                     multiline
                 />
-                <TouchableOpacity style={styles.moreButton}>
-                    <Feather name='more-horizontal' size={24} color='#666' />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.voiceButton}>
-                    <FontAwesome name='microphone' size={24} color='#666' />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.stickerButton}>
-                    <MaterialIcons name='gif' size={24} color='#ff9500' />
-                </TouchableOpacity>
+                {showSendButton ? (
+                    <TouchableOpacity
+                        style={styles.sendButton}
+                        onPress={handleSendTextMessage}
+                    >
+                        <Ionicons name='send' size={24} color='#0084ff' />
+                    </TouchableOpacity>
+                ) : (
+                    <Fragment>
+                        <TouchableOpacity style={styles.moreButton}>
+                            <Feather
+                                name='more-horizontal'
+                                size={24}
+                                color='#666'
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.voiceButton}>
+                            <FontAwesome
+                                name='microphone'
+                                size={24}
+                                color='#666'
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.stickerButton}>
+                            <MaterialIcons
+                                name='gif'
+                                size={24}
+                                color='#ff9500'
+                            />
+                        </TouchableOpacity>
+                    </Fragment>
+                )}
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -446,5 +489,9 @@ const styles = StyleSheet.create({
     },
     stickerButton: {
         padding: 5,
+    },
+    sendButton: {
+        padding: 5,
+        marginLeft: 5,
     },
 });

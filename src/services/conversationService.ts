@@ -1,16 +1,14 @@
 import axiosInstance from '../configs/axiosClient';
-
-interface Conversation {
-    id: string;
-}
+import { IConversation } from '../stores/conversationsStore';
+import { SearchUserByPhoneNumber } from '../types/user';
 
 interface User {
     id: string;
 }
 
-export const getConversations = async (): Promise<Conversation[]> => {
+export const getConversations = async (): Promise<IConversation[]> => {
     try {
-        const response = await axiosInstance.get<Conversation[]>(
+        const response = await axiosInstance.get<IConversation[]>(
             '/conversations',
         );
         return response.data;
@@ -20,9 +18,11 @@ export const getConversations = async (): Promise<Conversation[]> => {
     }
 };
 
-export const getReceiver = async (conversationID: string): Promise<User> => {
+export const getReceiver = async (
+    conversationID: string,
+): Promise<SearchUserByPhoneNumber> => {
     try {
-        const response = await axiosInstance.get<User>(
+        const response = await axiosInstance.get<SearchUserByPhoneNumber>(
             `/conversations/getReceiver/${conversationID}`,
         );
         return response.data;

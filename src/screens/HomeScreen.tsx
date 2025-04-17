@@ -24,63 +24,20 @@ import {
     getFriendRequests,
     getSentFriendRequests,
 } from '../services/apiFunctionFriend';
-import { getConversations } from '../services/conversationService';
+import { getConversations, getReceiver } from '../services/conversationService';
 import useChatStore from '../stores/chatStore';
+import useConversationsStore, {
+    IConversation,
+} from '../stores/conversationsStore';
 import useFriendRequestsStore from '../stores/friendRequestsStore';
 import useFriendsStore from '../stores/friendsStore';
 import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
+import { SearchUserByPhoneNumber } from '../types/user';
+import { parseTimestamp } from '../utils';
 
 const StyledView = styled(View);
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'Chat'>;
-
-const mockMessages = [
-    {
-        id: '1',
-        name: 'Cloud của tôi',
-        message: 'https://www.canva.com/…',
-        time: 'T3',
-        avatar: {
-            uri: 'https://cdn-icons-png.flaticon.com/512/4144/4144467.png',
-        },
-    },
-    {
-        id: '2',
-        name: 'HayDay 2 💎 Nguyễn Tr…',
-        message: 'Nguyễn Trọng: @Nguyễn Hà…',
-        time: '33 phút',
-        avatar: {
-            uri: 'https://static.wikia.nocookie.net/hayday/images/3/3a/Chicken.png',
-        },
-    },
-    {
-        id: '3',
-        name: 'Nhóm Kiến Trúc',
-        message: 'Lê Đại Phát: [Sticker]',
-        time: '2 giờ',
-        avatar: {
-            uri: 'https://cdn-icons-png.flaticon.com/512/2922/2922510.png',
-        },
-    },
-    {
-        id: '4',
-        name: 'Ngô Nhật Tùng',
-        message: 'dạ okela sếp',
-        time: '3 giờ',
-        avatar: {
-            uri: 'https://cdn-icons-png.flaticon.com/512/194/194938.png',
-        },
-    },
-    {
-        id: '5',
-        name: 'Nguyễn Hồng Quân',
-        message: 'nhắn đi',
-        time: '3 giờ',
-        avatar: {
-            uri: 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png',
-        },
-    },
-];
 
 const menuItems = [
     { id: '1', title: 'Thêm bạn', icon: '👤' },
@@ -98,6 +55,7 @@ export default function HomeScreen() {
     const { setFriends } = useFriendsStore();
     const { setFriendRequests } = useFriendRequestsStore();
     const { setSentRequests } = useSentFriendRequestsStore();
+    const { conversations, setConversations } = useConversationsStore();
 
     const handleMenuItemPress = (itemId: string) => {
         setIsMenuVisible(false);
@@ -141,8 +99,47 @@ export default function HomeScreen() {
             if (sentFriendRequests.status === 'fulfilled')
                 setSentRequests(sentFriendRequests.value);
             else setSentRequests([]);
+            if (conversations.status === 'fulfilled') {
+                const conversationsValue: IConversation[] = conversations.value;
 
-            console.log('conversations', conversations);
+                const response = await Promise.all(
+                    conversations.value.map(
+                        (conversation) =>
+                            new Promise<
+                                SearchUserByPhoneNumber & {
+                                    conversationId: string;
+                                }
+                            >((resolve) =>
+                                getReceiver(
+                                    conversation.conversation.conversationID,
+                                ).then((receiver) => {
+                                    resolve({
+                                        conversationId:
+                                            conversation.conversation
+                                                .conversationID,
+                                        ...receiver,
+                                    });
+                                }),
+                            ),
+                    ),
+                );
+
+                setConversations(
+                    conversationsValue.map((c) => ({
+                        ...c,
+                        conversation: {
+                            ...c.conversation,
+                            receiver: response.find(
+                                (value) =>
+                                    value.conversationId ===
+                                    c.conversation.conversationID,
+                            ),
+                        },
+                    })),
+                );
+
+                console.log('conversationsValue', conversationsValue);
+            } else setConversations([]);
         };
 
         fetchData();
@@ -211,30 +208,43 @@ export default function HomeScreen() {
 
                 {/* DANH SÁCH TIN NHẮN */}
                 <FlatList
-                    data={mockMessages}
-                    keyExtractor={(item) => item.id}
+                    data={conversations}
+                    keyExtractor={(item) => item.conversation.conversationID}
                     renderItem={({ item }) => (
                         <TouchableOpacity
-                        // TODO
-                        // onPress={() => {
-                        //     setChat({
-                        //         id: item.id,
-                        //     });
-                        //     navigation.navigate('Chat');
-                        // }}
+                            onPress={() => {
+                                if (!item.conversation.receiver) return;
+
+                                setChat(item.conversation.receiver);
+                                navigation.navigate('Chat');
+                            }}
                         >
                             <View style={styles.messageItem}>
                                 <Image
-                                    source={item.avatar}
+                                    source={
+                                        item.conversation.receiver?.avatar
+                                            ? {
+                                                  uri: item.conversation
+                                                      .receiver.avatar,
+                                              }
+                                            : require('../assets/images/225-default-avatar.png')
+                                    }
                                     style={styles.avatar}
                                 />
                                 <View style={{ flex: 1 }}>
-                                    <Text style={styles.name}>{item.name}</Text>
+                                    <Text style={styles.name}>
+                                        {item.conversation.receiver?.fullName}
+                                    </Text>
                                     <Text style={styles.message}>
-                                        {item.message}
+                                        {item.lastMessage.messageContent}
                                     </Text>
                                 </View>
-                                <Text style={styles.time}>{item.time}</Text>
+                                <Text style={styles.time}>
+                                    {parseTimestamp(
+                                        item.lastMessage.updatedAt ??
+                                            item.lastMessage.createdAt,
+                                    )}
+                                </Text>
                             </View>
                         </TouchableOpacity>
                     )}
