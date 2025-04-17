@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 
 export interface Chat {
-    id: string;
+    avatar: string;
+    userID: string;
+    fullName: string;
 }
 
 interface ChatStore {

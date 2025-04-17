@@ -215,12 +215,13 @@ export default function HomeScreen() {
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (
                         <TouchableOpacity
-                            onPress={() => {
-                                setChat({
-                                    id: item.id,
-                                });
-                                navigation.navigate('Chat');
-                            }}
+                        // TODO
+                        // onPress={() => {
+                        //     setChat({
+                        //         id: item.id,
+                        //     });
+                        //     navigation.navigate('Chat');
+                        // }}
                         >
                             <View style={styles.messageItem}>
                                 <Image

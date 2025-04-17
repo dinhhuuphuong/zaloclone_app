@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import { RootStackParamList } from '../../navigation/types';
+import useChatStore from '../../stores/chatStore';
 import useFriendRequestsStore from '../../stores/friendRequestsStore';
 import useFriendsStore from '../../stores/friendsStore';
 import useSentFriendRequestsStore from '../../stores/sentFriendRequestsStore';
@@ -35,8 +36,10 @@ const FriendTab = () => {
     const { friends } = useFriendsStore();
     const { friendRequests } = useFriendRequestsStore();
     const { sentRequests } = useSentFriendRequestsStore();
+    const { setChat } = useChatStore();
 
-    const handleToChatScreen = () => {
+    const handleToChatScreen = (user: IFriendRequest) => {
+        setChat(user);
         navigation.navigate('Chat');
     };
 
@@ -156,7 +159,7 @@ const FriendTab = () => {
                         <TouchableOpacity
                             key={contact.userID}
                             style={styles.contactItem}
-                            onPress={handleToChatScreen}
+                            onPress={() => handleToChatScreen(contact)}
                         >
                             <Image
                                 source={{

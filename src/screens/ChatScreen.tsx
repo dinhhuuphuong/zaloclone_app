@@ -21,6 +21,8 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import useChatStore from '../stores/chatStore';
+import useUserOnlineStore from '../stores/userOnlineStore';
 
 // Define types for our messages
 type MessageType = {
@@ -41,6 +43,9 @@ type MessageType = {
 export default function ChatScreen() {
     const [message, setMessage] = useState('');
     const navigation = useNavigation();
+    const { chat } = useChatStore();
+    const { userOnline } = useUserOnlineStore();
+    const isOnline = userOnline?.userIds.includes(chat?.userID ?? '');
 
     // Sample messages data
     const messages: MessageType[] = [
@@ -126,9 +131,9 @@ export default function ChatScreen() {
                         <Ionicons name='chevron-back' size={24} color='white' />
                     </TouchableOpacity>
                     <View>
-                        <Text style={styles.headerName}>Hoài Thương</Text>
+                        <Text style={styles.headerName}>{chat?.fullName}</Text>
                         <Text style={styles.headerStatus}>
-                            Online 1 hour ago
+                            {isOnline ? 'Online' : 'Offline'}
                         </Text>
                     </View>
                 </View>
