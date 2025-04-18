@@ -331,9 +331,9 @@ export default function ChatScreen() {
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.stickerButton}>
                             <MaterialIcons
-                                name='gif'
+                                name='attach-file'
                                 size={24}
-                                color='#ff9500'
+                                color='#666'
                             />
                         </TouchableOpacity>
                     </Fragment>
