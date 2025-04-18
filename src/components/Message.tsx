@@ -1,3 +1,5 @@
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useEvent } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useEffect, useState } from 'react';
@@ -12,10 +14,13 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { RootStackParamList } from '../navigation/types';
 import { deleteMessage, revokeMessage } from '../services/messageService';
 import useChatStore from '../stores/chatStore';
 import { IMessage } from '../stores/messagesStore';
 import { parseTimestamp, showError } from '../utils';
+
+type NavigationProp = StackNavigationProp<RootStackParamList, 'ShareMessage'>;
 
 const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 const videoTypes = ['mp4', 'webm', 'mov'];
@@ -27,6 +32,7 @@ const Message = ({
     isOther: boolean;
     message: IMessage;
 }) => {
+    const navigation = useNavigation<NavigationProp>();
     const { chat } = useChatStore();
     const [modalVisible, setModalVisible] = useState(false);
     const isImage = imageTypes.includes(message.messageType?.toLowerCase());
@@ -82,7 +88,7 @@ const Message = ({
     };
 
     const handleShareMessage = () => {
-        // TODO: Implement share message logic
+        navigation.navigate('ShareMessage', message);
         setModalVisible(false);
     };
 
@@ -117,7 +123,7 @@ const Message = ({
                 ]}
             >
                 {isShowMessage || (
-                    <Text>
+                    <Text style={styles.secondaryText}>
                         {isRevoked
                             ? 'Tin nhắn đã được thu hồi'
                             : 'Bạn đã xoá tin nhắn này'}
@@ -315,5 +321,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#ff3b30',
         textAlign: 'center',
+    },
+    secondaryText: {
+        color: '#99a1af',
+        fontStyle: 'italic',
     },
 });

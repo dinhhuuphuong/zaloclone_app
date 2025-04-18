@@ -10,6 +10,7 @@ import FriendRequestsScreen from '../screens/FriendRequestsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import OtherUserProfile from '../screens/OtherUserProfile';
 import RegisterScreen from '../screens/RegisterScreen';
+import ShareMessage from '../screens/ShareMessageScreen';
 import UpdatePassword from '../screens/UpdatePassword';
 import { getCurrentUser } from '../services/authService';
 import useUserStore from '../stores/userStore';
@@ -82,6 +83,7 @@ const AppNavigator = () => {
                     name='FriendRequests'
                     component={FriendRequestsScreen}
                 />
+                <Stack.Screen name='ShareMessage' component={ShareMessage} />
             </Stack.Navigator>
         </NavigationContainer>
     );

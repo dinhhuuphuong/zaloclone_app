@@ -1,3 +1,4 @@
+import { IMessage } from '../stores/messagesStore';
 import { SearchUserByPhoneNumber } from '../types/user';
 
 export type RootStackParamList = {
@@ -15,4 +16,5 @@ export type RootStackParamList = {
     AddFriend: SearchUserByPhoneNumber;
     OtherUserProfile: SearchUserByPhoneNumber;
     FriendRequests: undefined;
+    ShareMessage: IMessage;
 };
