@@ -80,12 +80,12 @@ export default function HomeScreen() {
     useEffect(() => {
         const fetchData = async () => {
             const [
-                conversations,
+                // conversations,
                 friendRequests,
                 sentFriendRequests,
                 friendList,
             ] = await Promise.allSettled([
-                getConversations(),
+                // getConversations(),
                 getFriendRequests(),
                 getSentFriendRequests(),
                 getFriendList(),
@@ -99,45 +99,45 @@ export default function HomeScreen() {
             if (sentFriendRequests.status === 'fulfilled')
                 setSentRequests(sentFriendRequests.value);
             else setSentRequests([]);
-            if (conversations.status === 'fulfilled') {
-                const conversationsValue: IConversation[] = conversations.value;
+            // if (conversations.status === 'fulfilled') {
+            //     const conversationsValue: IConversation[] = conversations.value;
 
-                const response = await Promise.all(
-                    conversations.value.map(
-                        (conversation) =>
-                            new Promise<
-                                SearchUserByPhoneNumber & {
-                                    conversationId: string;
-                                }
-                            >((resolve) =>
-                                getReceiver(
-                                    conversation.conversation.conversationID,
-                                ).then((receiver) => {
-                                    resolve({
-                                        conversationId:
-                                            conversation.conversation
-                                                .conversationID,
-                                        ...receiver,
-                                    });
-                                }),
-                            ),
-                    ),
-                );
+            //     const response = await Promise.all(
+            //         conversations.value.map(
+            //             (conversation) =>
+            //                 new Promise<
+            //                     SearchUserByPhoneNumber & {
+            //                         conversationId: string;
+            //                     }
+            //                 >((resolve) =>
+            //                     getReceiver(
+            //                         conversation.conversation.conversationID,
+            //                     ).then((receiver) => {
+            //                         resolve({
+            //                             conversationId:
+            //                                 conversation.conversation
+            //                                     .conversationID,
+            //                             ...receiver,
+            //                         });
+            //                     }),
+            //                 ),
+            //         ),
+            //     );
 
-                setConversations(
-                    conversationsValue.map((c) => ({
-                        ...c,
-                        conversation: {
-                            ...c.conversation,
-                            receiver: response.find(
-                                (value) =>
-                                    value.conversationId ===
-                                    c.conversation.conversationID,
-                            ),
-                        },
-                    })),
-                );
-            } else setConversations([]);
+            //     setConversations(
+            //         conversationsValue.map((c) => ({
+            //             ...c,
+            //             conversation: {
+            //                 ...c.conversation,
+            //                 receiver: response.find(
+            //                     (value) =>
+            //                         value.conversationId ===
+            //                         c.conversation.conversationID,
+            //                 ),
+            //             },
+            //         })),
+            //     );
+            // } else setConversations([]);
         };
 
         fetchData();

@@ -10,7 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
     Alert,
     Image,
@@ -51,11 +51,11 @@ export default function ChatScreen() {
     const { addConversation } = useConversationsStore();
     const scrollViewRef = useRef<ScrollView>(null);
 
-    const handleMessageChange = (text: string) => {
+    const handleMessageChange = useCallback((text: string) => {
         setMessage(text);
-    };
+    }, []);
 
-    const handleSendFileMessage = async () => {
+    const handleSendFileMessage = useCallback(async () => {
         if (selectedImages.length === 0) return;
 
         try {
@@ -82,9 +82,9 @@ export default function ChatScreen() {
         } catch (err) {
             console.error('Lỗi khi gửi file:', err);
         }
-    };
+    }, [selectedImages.length, files, chat]);
 
-    const handleSendTextMessage = async () => {
+    const handleSendTextMessage = useCallback(async () => {
         if (!message.trim()) return;
 
         try {
@@ -108,9 +108,9 @@ export default function ChatScreen() {
         } catch (err) {
             console.error('Lỗi khi gửi tin nhắn:', err);
         }
-    };
+    }, [message, chat]);
 
-    const pickImage = async () => {
+    const pickImage = useCallback(async () => {
         const { status } =
             await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -147,34 +147,37 @@ export default function ChatScreen() {
 
             setFiles(newFiles as any[]);
         }
-    };
+    }, []);
 
-    const handleSendFiles = async (file: File) => {
-        try {
-            const response = await sendFiles(chat?.userID ?? '', [file as any]);
-            setSelectedFile(null);
+    const handleSendFiles = useCallback(
+        async (file: File) => {
+            try {
+                const response = await sendFiles(chat?.userID ?? '', [
+                    file as any,
+                ]);
+                setSelectedFile(null);
 
-            if (response.createConversation?.conversationID) {
-                setConversationID(response.createConversation.conversationID);
-                addConversation({
-                    conversation: {
-                        ...response.createConversation,
-                        receiver: {
-                            ...chat,
+                if (response.createConversation?.conversationID) {
+                    setConversationID(
+                        response.createConversation.conversationID,
+                    );
+                    addConversation({
+                        conversation: {
+                            ...response.createConversation,
+                            receiver: chat,
                         },
-                    },
-                    lastMessage: {
-                        ...response.createNewMessage,
-                    },
-                });
+                        lastMessage: response.createNewMessage,
+                    });
+                }
+            } catch (err) {
+                console.error('Lỗi khi gửi file:', err);
+                alert('Có lỗi xảy ra khi gửi file');
             }
-        } catch (err) {
-            console.error('Lỗi khi gửi file:', err);
-            alert('Có lỗi xảy ra khi gửi file');
-        }
-    };
+        },
+        [chat],
+    );
 
-    const pickFile = async () => {
+    const pickFile = useCallback(async () => {
         try {
             const result = await DocumentPicker.getDocumentAsync({
                 type: '*/*',
@@ -186,7 +189,7 @@ export default function ChatScreen() {
                     uri: result.assets[0].uri,
                     name: result.assets[0].name,
                     type:
-                        result.assets[0].mimeType || 'application/octet-stream',
+                        result.assets[0].mimeType ?? 'application/octet-stream',
                 };
 
                 setSelectedFile(file as any);
@@ -202,7 +205,9 @@ export default function ChatScreen() {
                         },
                         {
                             text: 'Gửi',
-                            onPress: () => handleSendFiles(file as any),
+                            onPress: async () => {
+                                await handleSendFiles(file as any);
+                            },
                         },
                     ],
                 );
@@ -211,13 +216,13 @@ export default function ChatScreen() {
             console.error('Lỗi khi chọn file:', err);
             alert('Có lỗi xảy ra khi chọn file');
         }
-    };
+    }, []);
 
-    const scrollToBottom = () => {
+    const scrollToBottom = useCallback(() => {
         setTimeout(() => {
             scrollViewRef.current?.scrollToEnd({ animated: false });
         }, 100);
-    };
+    }, []);
 
     useEffect(() => {
         const fetchMessages = async () => {

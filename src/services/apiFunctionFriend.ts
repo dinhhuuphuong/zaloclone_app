@@ -54,6 +54,5 @@ export const getSentFriendRequests = async (): Promise<IFriendRequest[]> => {
 // Lấy danh sách bạn bè
 export const getFriendList = async (): Promise<IFriendRequest[]> => {
     const response = await axiosInstance.get(`/friends`, {});
-    console.log('getFriendList', response);
     return response.data;
 };

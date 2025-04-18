@@ -34,13 +34,6 @@ export const setupInterceptors = (
     axiosInstance.interceptors.response.use(
         (response: AxiosResponse): AxiosResponse => response,
         async (error: any): Promise<any> => {
-            // Log lỗi chi tiết
-            console.error('Response error:', {
-                status: error.response?.status,
-                data: error.response?.data,
-                message: error.message,
-            });
-
             const originalRequest = error.config;
 
             // Xử lý lỗi 422 (Unprocessable Entity)

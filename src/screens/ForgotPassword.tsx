@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
     Alert,
     KeyboardAvoidingView,
@@ -53,10 +53,6 @@ const ForgotPassword: React.FC = () => {
     const [verificationId, setVerificationId] = useState<string>('');
     const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
 
-    useEffect(() => {
-        console.log('formData OTP', formData);
-    }, [formData]);
-
     const handleSendOTP = async () => {
         try {
             const phoneNumber = '+84' + formData.phoneNumber.slice(1);
@@ -83,7 +79,10 @@ const ForgotPassword: React.FC = () => {
             setStep(2);
         } catch (error: any) {
             console.error('Không thể gửi OTP:', error.message);
-            Alert.alert('Lỗi', 'Không thể gửi OTP: ' + error.data?.message || error.message);
+            Alert.alert(
+                'Lỗi',
+                'Không thể gửi OTP: ' + error.data?.message || error.message,
+            );
         }
     };
 
@@ -171,7 +170,8 @@ const ForgotPassword: React.FC = () => {
                 console.log('Lỗi khi kiểm tra số điện thoại', error);
                 Alert.alert(
                     'Lỗi',
-                    error.data?.message || error.message ||
+                    error.data?.message ||
+                        error.message ||
                         'Lỗi khi kiểm tra số điện thoại!',
                 );
             }

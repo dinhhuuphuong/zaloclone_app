@@ -155,7 +155,7 @@ const Message = ({
                     <TouchableOpacity onPress={handleOpenPDF}>
                         <View style={styles.pdfContainer}>
                             <Text style={styles.pdfText}>
-                                📄 {message.messageContent || 'PDF File'}
+                                📄 {message.messageContent ?? 'PDF File'}
                             </Text>
                         </View>
                     </TouchableOpacity>
