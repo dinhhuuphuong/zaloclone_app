@@ -137,8 +137,6 @@ export default function HomeScreen() {
                         },
                     })),
                 );
-
-                console.log('conversationsValue', conversationsValue);
             } else setConversations([]);
         };
 

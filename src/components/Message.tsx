@@ -1,7 +1,15 @@
 import { useEvent } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useEffect } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+    Image,
+    Linking,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import { IMessage } from '../stores/messagesStore';
 import { parseTimestamp } from '../utils';
 
@@ -20,6 +28,19 @@ const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
     const { isPlaying } = useEvent(player, 'playingChange', {
         isPlaying: player.playing,
     });
+
+    const handleOpenPDF = async () => {
+        try {
+            const canOpen = await Linking.canOpenURL(message.messageUrl);
+            if (canOpen) {
+                await Linking.openURL(message.messageUrl);
+            } else {
+                console.error('Cannot open PDF file');
+            }
+        } catch (error) {
+            console.error('Error opening PDF:', error);
+        }
+    };
 
     useEffect(() => {
         if (!isVideo) return;
@@ -66,10 +87,19 @@ const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
                         allowsPictureInPicture
                     />
                 )}
+                {isPDF && (
+                    <TouchableOpacity onPress={handleOpenPDF}>
+                        <View style={styles.pdfContainer}>
+                            <Text style={styles.pdfText}>
+                                📄 {message.messageContent || 'PDF File'}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                )}
                 {message.messageType === 'sticker' && (
                     <Text style={styles.messageText}>Sticker</Text>
                 )}
-                {message.messageContent && !isImage && !isVideo && (
+                {message.messageContent && !isImage && !isVideo && !isPDF && (
                     <Text style={styles.messageText}>
                         {message.messageContent}
                     </Text>
@@ -139,5 +169,14 @@ const styles = StyleSheet.create({
         height: 200,
         borderRadius: 10,
         marginBottom: 5,
+    },
+    pdfContainer: {
+        padding: 10,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 8,
+    },
+    pdfText: {
+        fontSize: 16,
+        color: '#000',
     },
 });
