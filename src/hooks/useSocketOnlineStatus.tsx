@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Socket } from 'socket.io-client';
 import { useSocket } from '../contexts/SocketContext';
 import useUserOnlineStore from '../stores/userOnlineStore';
-import useUserStore from '../stores/userStore';
 
 interface UseSocketOnlineStatusProps {
     socket: typeof Socket | null;
@@ -12,11 +11,9 @@ interface UseSocketOnlineStatusProps {
 const useSocketOnlineStatus = () => {
     const { setUserOnline } = useUserOnlineStore();
     const socket = useSocket();
-    const { user } = useUserStore();
-    const userID = user?.userID;
 
     useEffect(() => {
-        if (!socket || !userID) return;
+        if (!socket) return;
 
         const handleOnlineUsers = (users: string[]) => {
             setUserOnline({ userIds: users });
@@ -27,7 +24,7 @@ const useSocketOnlineStatus = () => {
         return () => {
             socket.off('getOnlineUsers', handleOnlineUsers);
         };
-    }, [socket, userID]);
+    }, [socket]);
 };
 
 export default useSocketOnlineStatus;
