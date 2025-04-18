@@ -1,11 +1,14 @@
 import { useEffect } from 'react';
 import { useSocket } from '../contexts/SocketContext';
+import { getConversations, getReceiver } from '../services/conversationService';
 import { getMessagesByConversation } from '../services/messageService';
+import useConversationsStore from '../stores/conversationsStore';
 import useMessagesStore, { IMessage } from '../stores/messagesStore';
 import useUserStore from '../stores/userStore';
 
 const useMessageSocket = () => {
     const { setMessages } = useMessagesStore();
+    const { conversations, addConversation } = useConversationsStore();
     const socket = useSocket();
     const { user } = useUserStore();
     const userID = user?.userID;
@@ -29,6 +32,34 @@ const useMessageSocket = () => {
                         new Date(b.createdAt).getTime(),
                 );
                 setMessages(conversationID, sortedMessages);
+
+                const conversation = (conversations ?? []).find(
+                    (conversation) =>
+                        conversation.conversation.conversationID ===
+                        conversationID,
+                );
+
+                if (!conversation) {
+                    const [results, user] = await Promise.all([
+                        getConversations(),
+                        getReceiver(conversationID),
+                    ]);
+                    const conversation = results.find(
+                        (conversation) =>
+                            conversation.conversation.conversationID ===
+                            conversationID,
+                    );
+
+                    if (!conversation) return;
+
+                    addConversation({
+                        conversation: {
+                            ...conversation.conversation,
+                            receiver: user,
+                        },
+                        lastMessage: sortedMessages[sortedMessages.length - 1],
+                    });
+                }
             } catch {
                 setMessages(conversationID, []);
             }
@@ -39,7 +70,7 @@ const useMessageSocket = () => {
         return () => {
             socket.off('newMessage', handleNewMessage);
         };
-    }, [socket, userID, setMessages]);
+    }, [socket, userID, setMessages, conversations, addConversation]);
 };
 
 export default useMessageSocket;

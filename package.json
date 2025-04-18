@@ -4,8 +4,8 @@
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "dev:tailwind": "tailwindcss --input input.css --output tailwind.css --no-autoprefixer --watch"
   },
@@ -35,7 +35,8 @@
     "recoil": "^0.7.7",
     "socket.io-client": "^4.8.1",
     "uuid": "^11.1.0",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "expo-system-ui": "~4.0.9"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

@@ -38,3 +38,5 @@ yarn-error.*
 config-git.bat
 
 .env
+
+android

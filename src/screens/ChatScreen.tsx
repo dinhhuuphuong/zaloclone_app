@@ -10,7 +10,6 @@ import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { Fragment, useEffect, useState } from 'react';
 import {
-    Image,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -160,14 +159,14 @@ export default function ChatScreen() {
                                     : styles.contactMessageRow,
                             ]}
                         >
-                            {msg.senderID === chat?.userID && (
+                            {/* {msg.senderID === chat?.userID && (
                                 <Image
                                     source={{
                                         uri: 'https://via.placeholder.com/40',
                                     }}
                                     style={styles.avatar}
                                 />
-                            )}
+                            )} */}
                             <View
                                 style={[
                                     styles.messageContainer,
