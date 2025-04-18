@@ -16,3 +16,17 @@ export const sendTextMessage = async (receiverId: string, message: string) => {
     });
     return response.data;
 };
+
+export const sendFiles = async (receiverId: string, files: File[]) => {
+    const formData = new FormData();
+    files.forEach((file) => {
+        formData.append('files', file);
+    });
+
+    const response = await axiosInstance.post(
+        `/messages/send/files/${receiverId}`,
+        formData,
+    );
+
+    return response.data;
+};

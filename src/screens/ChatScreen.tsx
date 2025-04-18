@@ -30,25 +30,8 @@ import useMessagesStore from '../stores/messagesStore';
 import useUserOnlineStore from '../stores/userOnlineStore';
 import { parseTimestamp } from '../utils';
 
-// Define types for our messages
-type MessageType = {
-    id: string;
-    text?: string;
-    time: string;
-    date?: string;
-    isUser: boolean;
-    isSticker?: boolean;
-    stickerUrl?: string;
-    reactions?: {
-        type: string;
-        count: number;
-    }[];
-    status?: 'sent' | 'delivered' | 'read';
-};
-
 export default function ChatScreen() {
     const [message, setMessage] = useState('');
-    const [showSendButton, setShowSendButton] = useState(false);
     const navigation = useNavigation();
     const { chat, setConversationID } = useChatStore();
     const { userOnline } = useUserOnlineStore();
@@ -59,7 +42,6 @@ export default function ChatScreen() {
 
     const handleMessageChange = (text: string) => {
         setMessage(text);
-        setShowSendButton(text.trim().length > 0);
     };
 
     const handleSendTextMessage = async () => {
