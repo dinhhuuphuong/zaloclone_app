@@ -214,7 +214,7 @@ export default function ChatScreen() {
                     onChangeText={handleMessageChange}
                     multiline
                 />
-                {showSendButton ? (
+                {message ? (
                     <TouchableOpacity
                         style={styles.sendButton}
                         onPress={handleSendTextMessage}
