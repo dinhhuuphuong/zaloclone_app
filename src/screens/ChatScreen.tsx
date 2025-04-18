@@ -26,6 +26,7 @@ import {
     sendTextMessage,
 } from '../services/messageService';
 import useChatStore from '../stores/chatStore';
+import useConversationsStore from '../stores/conversationsStore';
 import useMessagesStore from '../stores/messagesStore';
 import useUserOnlineStore from '../stores/userOnlineStore';
 import { parseTimestamp } from '../utils';
@@ -50,11 +51,12 @@ export default function ChatScreen() {
     const [message, setMessage] = useState('');
     const [showSendButton, setShowSendButton] = useState(false);
     const navigation = useNavigation();
-    const { chat } = useChatStore();
+    const { chat, setConversationID } = useChatStore();
     const { userOnline } = useUserOnlineStore();
     const isOnline = userOnline?.userIds.includes(chat?.userID ?? '');
     const { conversations, setMessages } = useMessagesStore();
     const messages = conversations[chat?.conversationID ?? ''] ?? [];
+    const { addConversation } = useConversationsStore();
 
     const handleMessageChange = (text: string) => {
         setMessage(text);
@@ -65,8 +67,23 @@ export default function ChatScreen() {
         if (!message.trim()) return;
 
         try {
-            await sendTextMessage(chat?.userID ?? '', message);
+            const response = await sendTextMessage(chat?.userID ?? '', message);
             setMessage('');
+
+            if (response.createConversation?.conversationID) {
+                setConversationID(response.createConversation.conversationID);
+                addConversation({
+                    conversation: {
+                        ...response.createConversation,
+                        receiver: {
+                            ...chat,
+                        },
+                    },
+                    lastMessage: {
+                        ...response.createNewMessage,
+                    },
+                });
+            }
         } catch (err) {
             console.error('Lỗi khi gửi tin nhắn:', err);
         }

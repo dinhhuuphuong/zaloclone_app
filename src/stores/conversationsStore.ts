@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { SearchUserByPhoneNumber } from '../types/user';
+import { IUserBase, SearchUserByPhoneNumber } from '../types/user';
 
 export interface IConversation {
     conversation: Conversation;
@@ -13,7 +13,7 @@ export interface Conversation {
     userID: string;
     lastMessageID: string;
     updatedAt: number;
-    receiver?: SearchUserByPhoneNumber;
+    receiver?: IUserBase;
 }
 
 export interface LastMessage {
@@ -36,6 +36,7 @@ interface ConversationsStore {
         conversationID: string,
         receiver: SearchUserByPhoneNumber,
     ) => void;
+    addConversation: (conversation: IConversation) => void;
 }
 
 const useConversationsStore = create<ConversationsStore>((set) => ({
@@ -49,6 +50,10 @@ const useConversationsStore = create<ConversationsStore>((set) => ({
                     ? { ...conversation, receiver }
                     : conversation,
             ),
+        })),
+    addConversation: (conversation: IConversation) =>
+        set((state) => ({
+            conversations: [conversation, ...(state.conversations ?? [])],
         })),
 }));
 
