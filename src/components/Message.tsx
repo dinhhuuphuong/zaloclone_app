@@ -1,4 +1,6 @@
-import React from 'react';
+import { useEvent } from 'expo';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import React, { useEffect } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { IMessage } from '../stores/messagesStore';
 import { parseTimestamp } from '../utils';
@@ -10,6 +12,24 @@ const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
     const isImage = imageTypes.includes(message.messageType?.toLowerCase());
     const isVideo = videoTypes.includes(message.messageType?.toLowerCase());
     const isPDF = message.messageType?.toLowerCase() === 'pdf';
+    const player = useVideoPlayer(message.messageUrl, (player) => {
+        player.loop = true;
+        player.play();
+    });
+
+    const { isPlaying } = useEvent(player, 'playingChange', {
+        isPlaying: player.playing,
+    });
+
+    useEffect(() => {
+        if (!isVideo) return;
+
+        if (isPlaying) {
+            player.play();
+        } else {
+            player.pause();
+        }
+    }, [isPlaying, isVideo]);
 
     return (
         <View
@@ -29,21 +49,27 @@ const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
                         horizontal
                         style={styles.messageImagesContainer}
                     >
-                        {message.messageUrl
-                            .split(',')
-                            .map((url: string, index: number) => (
-                                <Image
-                                    key={index}
-                                    style={styles.messageImage}
-                                    source={{ uri: url.trim() }}
-                                />
-                            ))}
+                        {message.messageUrl.split(',').map((url: string) => (
+                            <Image
+                                key={url}
+                                style={styles.messageImage}
+                                source={{ uri: url.trim() }}
+                            />
+                        ))}
                     </ScrollView>
+                )}
+                {isVideo && (
+                    <VideoView
+                        style={styles.video}
+                        player={player}
+                        allowsFullscreen
+                        allowsPictureInPicture
+                    />
                 )}
                 {message.messageType === 'sticker' && (
                     <Text style={styles.messageText}>Sticker</Text>
                 )}
-                {message.messageContent && !isImage && (
+                {message.messageContent && !isImage && !isVideo && (
                     <Text style={styles.messageText}>
                         {message.messageContent}
                     </Text>
@@ -107,5 +133,11 @@ const styles = StyleSheet.create({
         height: 100,
         borderRadius: 10,
         marginRight: 5,
+    },
+    video: {
+        width: 200,
+        height: 200,
+        borderRadius: 10,
+        marginBottom: 5,
     },
 });

@@ -25,6 +25,7 @@
         "expo-image-picker": "^16.0.6",
         "expo-status-bar": "~2.0.1",
         "expo-system-ui": "~4.0.9",
+        "expo-video": "^2.0.6",
         "firebase": "^10.7.1",
         "prop-types": "^15.8.1",
         "react": "18.3.1",
