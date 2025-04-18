@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { IMessage } from '../stores/messagesStore';
 import { parseTimestamp } from '../utils';
 
@@ -18,10 +18,20 @@ const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
                 ]}
             >
                 {message.messageUrl && (
-                    <Image
-                        style={styles.messageImage}
-                        source={{ uri: message.messageUrl }}
-                    />
+                    <ScrollView
+                        horizontal
+                        style={styles.messageImagesContainer}
+                    >
+                        {message.messageUrl
+                            .split(',')
+                            .map((url: string, index: number) => (
+                                <Image
+                                    key={index}
+                                    style={styles.messageImage}
+                                    source={{ uri: url.trim() }}
+                                />
+                            ))}
+                    </ScrollView>
                 )}
                 {message.messageType === 'sticker' && (
                     <Text style={styles.messageText}>Sticker</Text>
@@ -81,9 +91,14 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-end',
         marginTop: 2,
     },
+    messageImagesContainer: {
+        flexDirection: 'row',
+        marginBottom: 5,
+    },
     messageImage: {
         width: 100,
         height: 100,
         borderRadius: 10,
+        marginRight: 5,
     },
 });

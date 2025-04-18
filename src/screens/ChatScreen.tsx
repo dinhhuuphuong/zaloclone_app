@@ -36,7 +36,7 @@ import useUserOnlineStore from '../stores/userOnlineStore';
 
 export default function ChatScreen() {
     const [message, setMessage] = useState('');
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [files, setFiles] = useState<File[]>([]);
     const [showImagePreview, setShowImagePreview] = useState(false);
     const navigation = useNavigation();
@@ -52,14 +52,14 @@ export default function ChatScreen() {
     };
 
     const handleSendFileMessage = async () => {
-        if (!selectedImage) return;
+        if (selectedImages.length === 0) return;
 
         try {
             const response = await sendFiles(chat?.userID ?? '', files);
             console.log('🚀 ~ handleSendFileMessage ~ response:', response);
 
             setFiles([]);
-            setSelectedImage(null);
+            setSelectedImages([]);
             setShowImagePreview(false);
 
             if (response.createConversation?.conversationID) {
@@ -118,23 +118,23 @@ export default function ChatScreen() {
 
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
+            allowsMultipleSelection: true,
             quality: 1,
         });
 
         if (!result.canceled) {
-            setSelectedImage(result.assets[0].uri);
+            const newImages = result.assets.map((asset) => asset.uri);
+            setSelectedImages(newImages);
             setShowImagePreview(true);
 
-            const files = await Promise.all(
+            const newFiles = await Promise.all(
                 result.assets.map(async (asset) => {
                     const response = await fetch(asset.uri);
                     const blob = await response.blob();
 
                     const file = {
                         uri: asset.uri,
-                        name: 'avatar.jpg',
+                        name: 'image.jpg',
                         type: blob.type || 'image/jpeg',
                     };
 
@@ -142,7 +142,7 @@ export default function ChatScreen() {
                 }),
             );
 
-            setFiles(files as any[]);
+            setFiles(newFiles as any[]);
         }
     };
 
@@ -209,17 +209,24 @@ export default function ChatScreen() {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
-                        {selectedImage && (
-                            <Image
-                                source={{ uri: selectedImage }}
-                                style={styles.previewImage}
-                            />
-                        )}
+                        <ScrollView horizontal style={styles.previewScrollView}>
+                            {selectedImages.map((imageUri, index) => (
+                                <View
+                                    key={index}
+                                    style={styles.previewImageContainer}
+                                >
+                                    <Image
+                                        source={{ uri: imageUri }}
+                                        style={styles.previewImage}
+                                    />
+                                </View>
+                            ))}
+                        </ScrollView>
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
                                 style={styles.modalButton}
                                 onPress={() => {
-                                    setSelectedImage(null);
+                                    setSelectedImages([]);
                                     setShowImagePreview(false);
                                 }}
                             >
@@ -497,11 +504,17 @@ const styles = StyleSheet.create({
         width: '90%',
         alignItems: 'center',
     },
-    previewImage: {
-        width: '100%',
-        height: 300,
-        borderRadius: 10,
+    previewScrollView: {
+        flexDirection: 'row',
         marginBottom: 20,
+    },
+    previewImageContainer: {
+        marginRight: 10,
+    },
+    previewImage: {
+        width: 200,
+        height: 200,
+        borderRadius: 10,
     },
     modalButtons: {
         flexDirection: 'row',
