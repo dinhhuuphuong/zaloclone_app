@@ -9,7 +9,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import {
     Image,
     KeyboardAvoidingView,
@@ -46,6 +46,7 @@ export default function ChatScreen() {
     const { conversations, setMessages } = useMessagesStore();
     const messages = conversations[chat?.conversationID ?? ''] ?? [];
     const { addConversation } = useConversationsStore();
+    const scrollViewRef = useRef<ScrollView>(null);
 
     const handleMessageChange = (text: string) => {
         setMessage(text);
@@ -56,7 +57,6 @@ export default function ChatScreen() {
 
         try {
             const response = await sendFiles(chat?.userID ?? '', files);
-            console.log('🚀 ~ handleSendFileMessage ~ response:', response);
 
             setFiles([]);
             setSelectedImages([]);
@@ -146,6 +146,12 @@ export default function ChatScreen() {
         }
     };
 
+    const scrollToBottom = () => {
+        setTimeout(() => {
+            scrollViewRef.current?.scrollToEnd({ animated: false });
+        }, 100);
+    };
+
     useEffect(() => {
         const fetchMessages = async () => {
             if (!chat?.conversationID) return;
@@ -158,6 +164,11 @@ export default function ChatScreen() {
         };
 
         fetchMessages();
+    }, [chat?.conversationID]);
+
+    useEffect(() => {
+        if (!chat?.conversationID) return;
+        scrollToBottom();
     }, [chat?.conversationID]);
 
     return (
@@ -255,8 +266,16 @@ export default function ChatScreen() {
 
             {/* Chat Messages */}
             <ScrollView
+                ref={scrollViewRef}
                 style={styles.messagesContainer}
                 contentContainerStyle={styles.messagesContent}
+                onContentSizeChange={scrollToBottom}
+                onLayout={scrollToBottom}
+                showsVerticalScrollIndicator={false}
+                maintainVisibleContentPosition={{
+                    minIndexForVisible: 0,
+                    autoscrollToTopThreshold: 10,
+                }}
             >
                 {messages.map((msg) => (
                     <Message
