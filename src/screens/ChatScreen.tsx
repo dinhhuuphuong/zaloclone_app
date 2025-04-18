@@ -346,7 +346,7 @@ export default function ChatScreen() {
             >
                 {messages.map((msg) => (
                     <Message
-                        isMe={msg.senderID === chat?.userID}
+                        isOther={msg.senderID === chat?.userID}
                         key={msg.messageID}
                         message={msg}
                     />

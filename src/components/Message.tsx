@@ -1,9 +1,11 @@
 import { useEvent } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Image,
     Linking,
+    Modal,
+    Pressable,
     ScrollView,
     StyleSheet,
     Text,
@@ -16,7 +18,14 @@ import { parseTimestamp } from '../utils';
 const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 const videoTypes = ['mp4', 'webm', 'mov'];
 
-const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
+const Message = ({
+    isOther,
+    message,
+}: {
+    isOther: boolean;
+    message: IMessage;
+}) => {
+    const [modalVisible, setModalVisible] = useState(false);
     const isImage = imageTypes.includes(message.messageType?.toLowerCase());
     const isVideo = videoTypes.includes(message.messageType?.toLowerCase());
     const isPDF = message.messageType?.toLowerCase() === 'pdf';
@@ -24,6 +33,9 @@ const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
         player.loop = true;
         player.play();
     });
+    const isRevoked = message.revoke;
+    const isDeletedBySender = message.senderDelete && isOther;
+    const isShowMessage = !isRevoked && !isDeletedBySender;
 
     const { isPlaying } = useEvent(player, 'playingChange', {
         isPlaying: player.playing,
@@ -42,6 +54,27 @@ const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
         }
     };
 
+    const handleDeleteMessage = () => {
+        // TODO: Implement delete message logic
+        setModalVisible(false);
+    };
+
+    const handleRecallMessage = () => {
+        // TODO: Implement recall message logic
+        setModalVisible(false);
+    };
+
+    const handleShareMessage = () => {
+        // TODO: Implement share message logic
+        setModalVisible(false);
+    };
+
+    const handleShowModal = () => {
+        if (isRevoked || isDeletedBySender) return;
+
+        setModalVisible(true);
+    };
+
     useEffect(() => {
         if (!isVideo) return;
 
@@ -56,16 +89,24 @@ const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
         <View
             style={[
                 styles.messageRow,
-                isMe ? styles.userMessageRow : styles.contactMessageRow,
+                isOther ? styles.userMessageRow : styles.contactMessageRow,
             ]}
         >
-            <View
+            <Pressable
+                onLongPress={handleShowModal}
                 style={[
                     styles.messageContainer,
-                    isMe ? styles.userMessage : styles.contactMessage,
+                    isOther ? styles.userMessage : styles.contactMessage,
                 ]}
             >
-                {isImage && (
+                {isShowMessage || (
+                    <Text>
+                        {isRevoked
+                            ? 'Tin nhắn đã được thu hồi'
+                            : 'Bạn đã xoá tin nhắn này'}
+                    </Text>
+                )}
+                {isShowMessage && isImage && (
                     <ScrollView
                         horizontal
                         style={styles.messageImagesContainer}
@@ -79,7 +120,7 @@ const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
                         ))}
                     </ScrollView>
                 )}
-                {isVideo && (
+                {isShowMessage && isVideo && (
                     <VideoView
                         style={styles.video}
                         player={player}
@@ -87,7 +128,7 @@ const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
                         allowsPictureInPicture
                     />
                 )}
-                {isPDF && (
+                {isShowMessage && isPDF && (
                     <TouchableOpacity onPress={handleOpenPDF}>
                         <View style={styles.pdfContainer}>
                             <Text style={styles.pdfText}>
@@ -96,18 +137,68 @@ const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
                         </View>
                     </TouchableOpacity>
                 )}
-                {message.messageType === 'sticker' && (
+                {isShowMessage && message.messageType === 'sticker' && (
                     <Text style={styles.messageText}>Sticker</Text>
                 )}
-                {message.messageContent && !isImage && !isVideo && !isPDF && (
-                    <Text style={styles.messageText}>
-                        {message.messageContent}
-                    </Text>
-                )}
+                {isShowMessage &&
+                    message.messageContent &&
+                    !isImage &&
+                    !isVideo &&
+                    !isPDF && (
+                        <Text style={styles.messageText}>
+                            {message.messageContent}
+                        </Text>
+                    )}
                 <Text style={styles.timeText}>
                     {parseTimestamp(message.createdAt)}
                 </Text>
-            </View>
+            </Pressable>
+
+            <Modal
+                animationType='slide'
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        {isOther || (
+                            <>
+                                <Pressable
+                                    style={styles.modalOption}
+                                    onPress={handleDeleteMessage}
+                                >
+                                    <Text style={styles.modalOptionText}>
+                                        Xóa tin nhắn
+                                    </Text>
+                                </Pressable>
+                                <Pressable
+                                    style={styles.modalOption}
+                                    onPress={handleRecallMessage}
+                                >
+                                    <Text style={styles.modalOptionText}>
+                                        Thu hồi tin nhắn
+                                    </Text>
+                                </Pressable>
+                            </>
+                        )}
+                        <Pressable
+                            style={styles.modalOption}
+                            onPress={handleShareMessage}
+                        >
+                            <Text style={styles.modalOptionText}>
+                                Chia sẻ tin nhắn
+                            </Text>
+                        </Pressable>
+                        <Pressable
+                            style={[styles.modalOption, styles.cancelOption]}
+                            onPress={() => setModalVisible(false)}
+                        >
+                            <Text style={styles.cancelText}>Hủy</Text>
+                        </Pressable>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -178,5 +269,34 @@ const styles = StyleSheet.create({
     pdfText: {
         fontSize: 16,
         color: '#000',
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        backgroundColor: 'white',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 20,
+    },
+    modalOption: {
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    modalOptionText: {
+        fontSize: 16,
+        color: '#000',
+    },
+    cancelOption: {
+        marginTop: 10,
+        borderBottomWidth: 0,
+    },
+    cancelText: {
+        fontSize: 16,
+        color: '#ff3b30',
+        textAlign: 'center',
     },
 });

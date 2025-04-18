@@ -70,9 +70,13 @@ const useMessageSocket = () => {
         };
 
         socket.on('newMessage', handleNewMessage);
+        socket.on('revokeMessage', handleNewMessage);
+        socket.on('deleteMessage', handleNewMessage);
 
         return () => {
             socket.off('newMessage', handleNewMessage);
+            socket.off('revokeMessage', handleNewMessage);
+            socket.off('deleteMessage', handleNewMessage);
         };
     }, [socket, userID, setMessages, conversations, addConversation]);
 };
