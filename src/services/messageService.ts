@@ -35,3 +35,42 @@ export const sendFiles = async (receiverId: string, files: File[]) => {
 
     return response.data;
 };
+
+export const revokeMessage = async (
+    participantId: string,
+    messageID: string,
+    conversationID: string,
+) => {
+    const response = await axiosInstance.post(
+        `/messages/revoke/${participantId}`,
+        {
+            messageID,
+            conversationID,
+        },
+    );
+    return response.data;
+};
+
+export const deleteMessage = async (
+    messageID: string,
+    conversationID: string,
+) => {
+    const response = await axiosInstance.post('/messages/delete', {
+        messageID,
+        conversationID,
+    });
+    return response.data;
+};
+
+export const shareMessage = async (
+    messageID: string,
+    receiverIds: string[],
+    conversationID: string,
+) => {
+    const response = await axiosInstance.post('/messages/share', {
+        messageID,
+        receiverIds,
+        conversationID,
+    });
+    return response.data;
+};

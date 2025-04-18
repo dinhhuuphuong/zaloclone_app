@@ -12,8 +12,10 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { deleteMessage, revokeMessage } from '../services/messageService';
+import useChatStore from '../stores/chatStore';
 import { IMessage } from '../stores/messagesStore';
-import { parseTimestamp } from '../utils';
+import { parseTimestamp, showError } from '../utils';
 
 const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 const videoTypes = ['mp4', 'webm', 'mov'];
@@ -25,6 +27,7 @@ const Message = ({
     isOther: boolean;
     message: IMessage;
 }) => {
+    const { chat } = useChatStore();
     const [modalVisible, setModalVisible] = useState(false);
     const isImage = imageTypes.includes(message.messageType?.toLowerCase());
     const isVideo = videoTypes.includes(message.messageType?.toLowerCase());
@@ -34,7 +37,7 @@ const Message = ({
         player.play();
     });
     const isRevoked = message.revoke;
-    const isDeletedBySender = message.senderDelete && isOther;
+    const isDeletedBySender = message.senderDelete && !isOther;
     const isShowMessage = !isRevoked && !isDeletedBySender;
 
     const { isPlaying } = useEvent(player, 'playingChange', {
@@ -54,14 +57,28 @@ const Message = ({
         }
     };
 
-    const handleDeleteMessage = () => {
-        // TODO: Implement delete message logic
-        setModalVisible(false);
+    const handleDeleteMessage = async () => {
+        try {
+            await deleteMessage(message.messageID, message.conversationID);
+        } catch (error) {
+            showError(error, 'Có lỗi xảy ra khi xóa tin nhắn');
+        } finally {
+            setModalVisible(false);
+        }
     };
 
-    const handleRecallMessage = () => {
-        // TODO: Implement recall message logic
-        setModalVisible(false);
+    const handleRecallMessage = async () => {
+        try {
+            await revokeMessage(
+                chat?.userID ?? '',
+                message.messageID,
+                message.conversationID,
+            );
+        } catch (error) {
+            showError(error, 'Không thể thu hồi tin nhắn');
+        } finally {
+            setModalVisible(false);
+        }
     };
 
     const handleShareMessage = () => {
