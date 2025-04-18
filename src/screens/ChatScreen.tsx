@@ -7,10 +7,13 @@ import {
     SimpleLineIcons,
 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
 import { Fragment, useEffect, useState } from 'react';
 import {
+    Image,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     ScrollView,
     StyleSheet,
@@ -20,18 +23,22 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Message from '../components/Message';
 import {
     getMessagesByConversation,
+    sendFiles,
     sendTextMessage,
 } from '../services/messageService';
 import useChatStore from '../stores/chatStore';
 import useConversationsStore from '../stores/conversationsStore';
 import useMessagesStore from '../stores/messagesStore';
 import useUserOnlineStore from '../stores/userOnlineStore';
-import { parseTimestamp } from '../utils';
 
 export default function ChatScreen() {
     const [message, setMessage] = useState('');
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [files, setFiles] = useState<File[]>([]);
+    const [showImagePreview, setShowImagePreview] = useState(false);
     const navigation = useNavigation();
     const { chat, setConversationID } = useChatStore();
     const { userOnline } = useUserOnlineStore();
@@ -42,6 +49,36 @@ export default function ChatScreen() {
 
     const handleMessageChange = (text: string) => {
         setMessage(text);
+    };
+
+    const handleSendFileMessage = async () => {
+        if (!selectedImage) return;
+
+        try {
+            const response = await sendFiles(chat?.userID ?? '', files);
+            console.log('🚀 ~ handleSendFileMessage ~ response:', response);
+
+            setFiles([]);
+            setSelectedImage(null);
+            setShowImagePreview(false);
+
+            if (response.createConversation?.conversationID) {
+                setConversationID(response.createConversation.conversationID);
+                addConversation({
+                    conversation: {
+                        ...response.createConversation,
+                        receiver: {
+                            ...chat,
+                        },
+                    },
+                    lastMessage: {
+                        ...response.createNewMessage,
+                    },
+                });
+            }
+        } catch (err) {
+            console.error('Lỗi khi gửi file:', err);
+        }
     };
 
     const handleSendTextMessage = async () => {
@@ -67,6 +104,45 @@ export default function ChatScreen() {
             }
         } catch (err) {
             console.error('Lỗi khi gửi tin nhắn:', err);
+        }
+    };
+
+    const pickImage = async () => {
+        const { status } =
+            await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (status !== 'granted') {
+            alert('Xin lỗi, chúng tôi cần quyền truy cập thư viện ảnh!');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            setSelectedImage(result.assets[0].uri);
+            setShowImagePreview(true);
+
+            const files = await Promise.all(
+                result.assets.map(async (asset) => {
+                    const response = await fetch(asset.uri);
+                    const blob = await response.blob();
+
+                    const file = {
+                        uri: asset.uri,
+                        name: 'avatar.jpg',
+                        type: blob.type || 'image/jpeg',
+                    };
+
+                    return file;
+                }),
+            );
+
+            setFiles(files as any[]);
         }
     };
 
@@ -125,54 +201,63 @@ export default function ChatScreen() {
                 </View>
             </View>
 
+            {/* Image Preview Modal */}
+            <Modal
+                visible={showImagePreview}
+                transparent={true}
+                animationType='slide'
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        {selectedImage && (
+                            <Image
+                                source={{ uri: selectedImage }}
+                                style={styles.previewImage}
+                            />
+                        )}
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={styles.modalButton}
+                                onPress={() => {
+                                    setSelectedImage(null);
+                                    setShowImagePreview(false);
+                                }}
+                            >
+                                <Text style={styles.modalButtonText}>Hủy</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.sendButton]}
+                                onPress={() => {
+                                    setShowImagePreview(false);
+                                    handleSendFileMessage();
+                                }}
+                            >
+                                <Text
+                                    style={[
+                                        styles.modalButtonText,
+                                        styles.sendButtonText,
+                                    ]}
+                                >
+                                    Gửi
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
             {/* Chat Messages */}
             <ScrollView
                 style={styles.messagesContainer}
                 contentContainerStyle={styles.messagesContent}
             >
-                {messages.map((msg) => {
-                    return (
-                        <View
-                            key={msg.messageID}
-                            style={[
-                                styles.messageRow,
-                                msg.senderID === chat?.userID
-                                    ? styles.userMessageRow
-                                    : styles.contactMessageRow,
-                            ]}
-                        >
-                            {/* {msg.senderID === chat?.userID && (
-                                <Image
-                                    source={{
-                                        uri: 'https://via.placeholder.com/40',
-                                    }}
-                                    style={styles.avatar}
-                                />
-                            )} */}
-                            <View
-                                style={[
-                                    styles.messageContainer,
-                                    msg.senderID === chat?.userID
-                                        ? styles.userMessage
-                                        : styles.contactMessage,
-                                ]}
-                            >
-                                {msg.messageType === 'sticker' ? (
-                                    <Text style={styles.messageText}>
-                                        Sticker
-                                    </Text>
-                                ) : (
-                                    <Text style={styles.messageText}>
-                                        {msg.messageContent}
-                                    </Text>
-                                )}
-                                <Text style={styles.timeText}>
-                                    {parseTimestamp(msg.createdAt)}
-                                </Text>
-                            </View>
-                        </View>
-                    );
-                })}
+                {messages.map((msg) => (
+                    <Message
+                        isMe={msg.senderID === chat?.userID}
+                        key={msg.messageID}
+                        message={msg}
+                    />
+                ))}
             </ScrollView>
 
             {/* Input Area */}
@@ -205,12 +290,11 @@ export default function ChatScreen() {
                     </TouchableOpacity>
                 ) : (
                     <Fragment>
-                        <TouchableOpacity style={styles.moreButton}>
-                            <Feather
-                                name='more-horizontal'
-                                size={24}
-                                color='#666'
-                            />
+                        <TouchableOpacity
+                            style={styles.moreButton}
+                            onPress={pickImage}
+                        >
+                            <Feather name='image' size={24} color='#666' />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.voiceButton}>
                             <FontAwesome
@@ -399,5 +483,44 @@ const styles = StyleSheet.create({
     sendButton: {
         padding: 5,
         marginLeft: 5,
+    },
+    modalContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 20,
+        width: '90%',
+        alignItems: 'center',
+    },
+    previewImage: {
+        width: '100%',
+        height: 300,
+        borderRadius: 10,
+        marginBottom: 20,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+    modalButton: {
+        padding: 10,
+        borderRadius: 5,
+        width: '45%',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ddd',
+    },
+    modalButtonText: {
+        fontSize: 16,
+        color: '#666',
+    },
+    sendButtonText: {
+        color: '#0084ff',
     },
 });

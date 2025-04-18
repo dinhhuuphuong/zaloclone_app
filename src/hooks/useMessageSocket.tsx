@@ -18,7 +18,11 @@ const useMessageSocket = () => {
 
         const handleNewMessage = (data: IMessage) => {
             console.log('New message received:', data);
-            fetchAndSortMessages(data.conversationID);
+            fetchAndSortMessages(
+                Array.isArray(data)
+                    ? data[0].conversationID
+                    : data.conversationID,
+            );
         };
 
         const fetchAndSortMessages = async (conversationID: string) => {

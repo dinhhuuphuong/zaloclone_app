@@ -26,6 +26,11 @@ export const sendFiles = async (receiverId: string, files: File[]) => {
     const response = await axiosInstance.post(
         `/messages/send/files/${receiverId}`,
         formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        },
     );
 
     return response.data;
