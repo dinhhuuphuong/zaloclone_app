@@ -7,10 +7,12 @@ import {
     SimpleLineIcons,
 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import {
+    Alert,
     Image,
     KeyboardAvoidingView,
     Modal,
@@ -39,6 +41,7 @@ export default function ChatScreen() {
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [files, setFiles] = useState<File[]>([]);
     const [showImagePreview, setShowImagePreview] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const navigation = useNavigation();
     const { chat, setConversationID } = useChatStore();
     const { userOnline } = useUserOnlineStore();
@@ -143,6 +146,70 @@ export default function ChatScreen() {
             );
 
             setFiles(newFiles as any[]);
+        }
+    };
+
+    const handleSendFiles = async (file: File) => {
+        try {
+            const response = await sendFiles(chat?.userID ?? '', [file as any]);
+            setSelectedFile(null);
+
+            if (response.createConversation?.conversationID) {
+                setConversationID(response.createConversation.conversationID);
+                addConversation({
+                    conversation: {
+                        ...response.createConversation,
+                        receiver: {
+                            ...chat,
+                        },
+                    },
+                    lastMessage: {
+                        ...response.createNewMessage,
+                    },
+                });
+            }
+        } catch (err) {
+            console.error('Lỗi khi gửi file:', err);
+            alert('Có lỗi xảy ra khi gửi file');
+        }
+    };
+
+    const pickFile = async () => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: '*/*',
+                copyToCacheDirectory: true,
+            });
+
+            if (!result.canceled) {
+                const file = {
+                    uri: result.assets[0].uri,
+                    name: result.assets[0].name,
+                    type:
+                        result.assets[0].mimeType || 'application/octet-stream',
+                };
+
+                setSelectedFile(file as any);
+
+                Alert.alert(
+                    'Xác nhận gửi file',
+                    'Bạn có chắc chắn muốn gửi file này?',
+                    [
+                        {
+                            text: 'Hủy',
+                            style: 'cancel',
+                            onPress: () => setSelectedFile(null),
+                        },
+                        {
+                            text: 'Gửi',
+                            onPress: () => handleSendFiles(file as any),
+                        },
+                    ],
+                );
+            }
+        } catch (err) {
+            console.error('Lỗi khi chọn file:', err);
+            alert('Có lỗi xảy ra khi chọn file');
         }
     };
 
@@ -329,7 +396,10 @@ export default function ChatScreen() {
                                 color='#666'
                             />
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.stickerButton}>
+                        <TouchableOpacity
+                            style={styles.stickerButton}
+                            onPress={pickFile}
+                        >
                             <MaterialIcons
                                 name='attach-file'
                                 size={24}

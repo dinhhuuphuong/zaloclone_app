@@ -3,7 +3,14 @@ import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { IMessage } from '../stores/messagesStore';
 import { parseTimestamp } from '../utils';
 
+const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+const videoTypes = ['mp4', 'webm', 'mov'];
+
 const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
+    const isImage = imageTypes.includes(message.messageType?.toLowerCase());
+    const isVideo = videoTypes.includes(message.messageType?.toLowerCase());
+    const isPDF = message.messageType?.toLowerCase() === 'pdf';
+
     return (
         <View
             style={[
@@ -17,7 +24,7 @@ const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
                     isMe ? styles.userMessage : styles.contactMessage,
                 ]}
             >
-                {message.messageUrl && (
+                {isImage && (
                     <ScrollView
                         horizontal
                         style={styles.messageImagesContainer}
@@ -36,7 +43,7 @@ const Message = ({ isMe, message }: { isMe: boolean; message: IMessage }) => {
                 {message.messageType === 'sticker' && (
                     <Text style={styles.messageText}>Sticker</Text>
                 )}
-                {message.messageType === 'text' && !message.messageUrl && (
+                {message.messageContent && !isImage && (
                     <Text style={styles.messageText}>
                         {message.messageContent}
                     </Text>
