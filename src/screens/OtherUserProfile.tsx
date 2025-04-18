@@ -15,6 +15,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
 import { cancelFriendRequest } from '../services/apiFunctionFriend';
+import { haveTheyChatted } from '../services/conversationService';
+import useChatStore from '../stores/chatStore';
 import useFriendRequestsStore from '../stores/friendRequestsStore';
 import useFriendsStore from '../stores/friendsStore';
 import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
@@ -36,6 +38,7 @@ const RECEIVED = 2;
 const FRIEND = 3;
 
 export default function OtherUserProfile() {
+    const { setChat } = useChatStore();
     const { friends } = useFriendsStore();
     const { sentRequests, setSentRequests } = useSentFriendRequestsStore();
     const { friendRequests } = useFriendRequestsStore();
@@ -63,6 +66,18 @@ export default function OtherUserProfile() {
 
         return NOT_FRIEND;
     }, [friends, sentRequests, friendRequests, userInfo.userID]);
+
+    const handleToChatScreen = async () => {
+        const response = await haveTheyChatted(userInfo.userID);
+
+        setChat({
+            ...userInfo,
+            conversationID: response
+                ? response.convDetails.conversationID
+                : undefined,
+        });
+        navigation.navigate('Chat');
+    };
 
     // Sample data for suggested friends
     const suggestedFriends: SuggestedFriend[] = [
@@ -174,7 +189,10 @@ export default function OtherUserProfile() {
 
                     {/* Action Buttons */}
                     <View style={styles.actionButtons}>
-                        <TouchableOpacity style={styles.messageButton}>
+                        <TouchableOpacity
+                            style={styles.messageButton}
+                            onPress={handleToChatScreen}
+                        >
                             <Ionicons
                                 name='chatbubble-outline'
                                 size={20}
