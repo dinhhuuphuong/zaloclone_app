@@ -73,9 +73,11 @@ const useConversationSocket = () => {
         fetchConversationList();
 
         socket.on('notification', handleGetConversationList);
+        socket.on('newConversation', handleGetConversationList);
 
         return () => {
             socket.off('notification', handleGetConversationList);
+            socket.off('newConversation', handleGetConversationList);
         };
     }, [socket, userID]);
 

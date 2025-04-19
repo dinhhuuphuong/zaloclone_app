@@ -1,16 +1,19 @@
 import { useEffect } from 'react';
 import { useSocket } from '../contexts/SocketContext';
 import {
+    getFriendList,
     getFriendRequests,
     getSentFriendRequests,
 } from '../services/apiFunctionFriend';
 import useFriendRequestsStore from '../stores/friendRequestsStore';
+import useFriendsStore from '../stores/friendsStore';
 import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
 import useUserStore from '../stores/userStore';
 
 const useFriendRequestSocket = () => {
     const { setFriendRequests } = useFriendRequestsStore();
     const { setSentRequests } = useSentFriendRequestsStore();
+    const { setFriends } = useFriendsStore();
     const socket = useSocket();
     const { user } = useUserStore();
     const userID = user?.userID;
@@ -20,9 +23,7 @@ const useFriendRequestSocket = () => {
             const results = await getFriendRequests();
             setFriendRequests(results);
         } catch (error: any) {
-            if (error.response?.data?.statusCode === 404) {
-                setFriendRequests([]);
-            }
+            setFriendRequests([]);
         }
     };
 
@@ -31,9 +32,16 @@ const useFriendRequestSocket = () => {
             const results = await getSentFriendRequests();
             setSentRequests(results);
         } catch (error: any) {
-            if (error.response?.data?.statusCode === 404) {
-                setSentRequests([]);
-            }
+            setSentRequests([]);
+        }
+    };
+
+    const fetchFriendList = async () => {
+        try {
+            const results = await getFriendList();
+            setFriends(results);
+        } catch (error: any) {
+            setFriends([]);
         }
     };
 
@@ -53,6 +61,7 @@ const useFriendRequestSocket = () => {
         const handleFriendRequestAccepted = () => {
             fetchRequestList();
             fetchSentRequestList();
+            fetchFriendList();
         };
 
         socket.on('friendRequest', handleFiendRequest);
