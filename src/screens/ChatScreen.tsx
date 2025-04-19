@@ -44,6 +44,7 @@ export default function ChatScreen() {
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [files, setFiles] = useState<File[]>([]);
     const [showImagePreview, setShowImagePreview] = useState(false);
+    const [selection, setSelection] = useState({ start: 0, end: 0 });
     const navigation = useNavigation();
     const { chat, setConversationID } = useChatStore();
     const { userOnline } = useUserOnlineStore();
@@ -53,6 +54,7 @@ export default function ChatScreen() {
     const { addConversation } = useConversationsStore();
     const scrollViewRef = useRef<ScrollView>(null);
     const [isOpenEmoji, setIsOpenEmoji] = useState<boolean>(false);
+    const inputRef = useRef<TextInput>(null);
 
     const handleMessageChange = useCallback((text: string) => {
         setMessage(text);
@@ -224,8 +226,16 @@ export default function ChatScreen() {
     }, []);
 
     const handleEmojiSelect = useCallback(
-        (emoji: string) => setMessage(message + emoji),
-        [message],
+        (emoji: string) => {
+            const newText =
+                message.substring(0, selection.start) +
+                emoji +
+                message.substring(selection.end);
+            setMessage(newText);
+            const newPosition = selection.start + emoji.length;
+            setSelection({ start: newPosition, end: newPosition });
+        },
+        [message, selection],
     );
 
     const handleShowEmoji = useCallback(() => {
@@ -388,11 +398,16 @@ export default function ChatScreen() {
                     />
                 </TouchableOpacity>
                 <TextInput
+                    ref={inputRef}
                     style={styles.input}
                     placeholder='Message'
                     placeholderTextColor='#999'
                     value={message}
                     onChangeText={handleMessageChange}
+                    onSelectionChange={(e) =>
+                        setSelection(e.nativeEvent.selection)
+                    }
+                    selection={selection}
                     multiline
                 />
                 {message ? (
