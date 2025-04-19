@@ -3,6 +3,7 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useMemo } from 'react';
 import {
+    Alert,
     Dimensions,
     Image,
     ImageBackground,
@@ -14,7 +15,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
-import { cancelFriendRequest } from '../services/apiFunctionFriend';
+import {
+    acceptFriendRequest,
+    cancelFriendRequest,
+    declineFriendRequest,
+} from '../services/apiFunctionFriend';
 import { haveTheyChatted } from '../services/conversationService';
 import useChatStore from '../stores/chatStore';
 import useFriendRequestsStore from '../stores/friendRequestsStore';
@@ -38,10 +43,10 @@ const RECEIVED = 2;
 const FRIEND = 3;
 
 export default function OtherUserProfile() {
+    const { friendRequests, setFriendRequests } = useFriendRequestsStore();
+    const { friends, setFriends } = useFriendsStore();
     const { setChat } = useChatStore();
-    const { friends } = useFriendsStore();
     const { sentRequests, setSentRequests } = useSentFriendRequestsStore();
-    const { friendRequests } = useFriendRequestsStore();
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<RouteProps>();
     const userInfo = route.params;
@@ -110,12 +115,38 @@ export default function OtherUserProfile() {
         navigation.goBack();
     };
 
-    const handleDecline = () => {
-        console.log('Decline');
+    const handleDecline = async () => {
+        try {
+            await declineFriendRequest(userInfo.userID);
+
+            setFriendRequests(
+                friendRequests.filter(
+                    (request) => request.userID !== userInfo.userID,
+                ),
+            );
+
+            Alert.alert('Success', 'Đã từ chối lời mời kết bạn');
+        } catch (error) {
+            showError(error, 'Decline request failed');
+        }
     };
 
-    const handleAccept = () => {
-        console.log('Accept');
+    const handleAccept = async () => {
+        try {
+            await acceptFriendRequest(userInfo.userID);
+
+            setFriendRequests(
+                friendRequests.filter(
+                    (request) => request.userID !== userInfo.userID,
+                ),
+            );
+
+            setFriends([...friends, userInfo]);
+
+            Alert.alert('Success', 'Đã chấp nhận lời mời kết bạn');
+        } catch (error) {
+            showError(error, 'Decline request failed');
+        }
     };
 
     const handleRecall = async (id: string) => {
