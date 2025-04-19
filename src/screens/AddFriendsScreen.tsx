@@ -21,10 +21,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
 import { searchUserByPhoneNumber } from '../services/apiFunctionsUser';
 import { showError } from '../utils';
+import useUserStore from '../stores/userStore';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'AddFriend'>;
 
 export default function AddFriendsScreen() {
+    const { user } = useUserStore();
     const [phoneNumber, setPhoneNumber] = useState('');
     const [countryCode] = useState('+84');
     const [isLoading, setIsLoading] = useState(false);
@@ -70,7 +72,7 @@ export default function AddFriendsScreen() {
                 {/* QR Code Card */}
                 <View style={styles.qrCardContainer}>
                     <View style={styles.qrCard}>
-                        <Text style={styles.qrCardName}>Hà Anh Thảo</Text>
+                        <Text style={styles.qrCardName}>{user?.fullName}</Text>
                         <Image
                             source={require('../assets/images/qr-code.png')}
                             style={styles.qrCode}

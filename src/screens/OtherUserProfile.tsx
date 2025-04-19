@@ -75,13 +75,13 @@ export default function OtherUserProfile() {
                 ...userInfo,
                 conversationID: response
                     ? response.convDetails.conversationID
-                    : undefined,
+                    : userInfo.userID,
             });
             navigation.navigate('Chat');
         } catch (error) {
             setChat({
                 ...userInfo,
-                conversationID: undefined,
+                conversationID: userInfo.userID,
             });
             navigation.navigate('Chat');
         }

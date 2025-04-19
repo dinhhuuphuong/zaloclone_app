@@ -47,13 +47,13 @@ const FriendTab = () => {
                 ...user,
                 conversationID: response
                     ? response.convDetails.conversationID
-                    : undefined,
+                    : user.userID,
             });
             navigation.navigate('Chat');
         } catch (error) {
             setChat({
                 ...user,
-                conversationID: undefined,
+                conversationID: user.userID,
             });
             navigation.navigate('Chat');
         }
