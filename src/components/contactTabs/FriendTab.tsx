@@ -40,15 +40,23 @@ const FriendTab = () => {
     const { setChat } = useChatStore();
 
     const handleToChatScreen = async (user: IFriendRequest) => {
-        const response = await haveTheyChatted(user.userID);
+        try {
+            const response = await haveTheyChatted(user.userID);
 
-        setChat({
-            ...user,
-            conversationID: response
-                ? response.convDetails.conversationID
-                : undefined,
-        });
-        navigation.navigate('Chat');
+            setChat({
+                ...user,
+                conversationID: response
+                    ? response.convDetails.conversationID
+                    : undefined,
+            });
+            navigation.navigate('Chat');
+        } catch (error) {
+            setChat({
+                ...user,
+                conversationID: undefined,
+            });
+            navigation.navigate('Chat');
+        }
     };
 
     const handleNavigateToFriendRequests = () => {

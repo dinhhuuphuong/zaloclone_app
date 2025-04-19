@@ -68,15 +68,23 @@ export default function OtherUserProfile() {
     }, [friends, sentRequests, friendRequests, userInfo.userID]);
 
     const handleToChatScreen = async () => {
-        const response = await haveTheyChatted(userInfo.userID);
+        try {
+            const response = await haveTheyChatted(userInfo.userID);
 
-        setChat({
-            ...userInfo,
-            conversationID: response
-                ? response.convDetails.conversationID
-                : undefined,
-        });
-        navigation.navigate('Chat');
+            setChat({
+                ...userInfo,
+                conversationID: response
+                    ? response.convDetails.conversationID
+                    : undefined,
+            });
+            navigation.navigate('Chat');
+        } catch (error) {
+            setChat({
+                ...userInfo,
+                conversationID: undefined,
+            });
+            navigation.navigate('Chat');
+        }
     };
 
     // Sample data for suggested friends
