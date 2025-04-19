@@ -14,6 +14,7 @@ import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
     Alert,
     Image,
+    Keyboard,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -24,6 +25,8 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import EmojiSelector from 'react-native-emoji-selector';
+import OutsidePressHandler from 'react-native-outside-press';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Message from '../components/Message';
 import {
@@ -41,7 +44,6 @@ export default function ChatScreen() {
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [files, setFiles] = useState<File[]>([]);
     const [showImagePreview, setShowImagePreview] = useState(false);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const navigation = useNavigation();
     const { chat, setConversationID } = useChatStore();
     const { userOnline } = useUserOnlineStore();
@@ -50,6 +52,7 @@ export default function ChatScreen() {
     const messages = conversations[chat?.conversationID ?? ''] ?? [];
     const { addConversation } = useConversationsStore();
     const scrollViewRef = useRef<ScrollView>(null);
+    const [isOpenEmoji, setIsOpenEmoji] = useState<boolean>(false);
 
     const handleMessageChange = useCallback((text: string) => {
         setMessage(text);
@@ -155,7 +158,6 @@ export default function ChatScreen() {
                 const response = await sendFiles(chat?.userID ?? '', [
                     file as any,
                 ]);
-                setSelectedFile(null);
 
                 if (response.createConversation?.conversationID) {
                     setConversationID(
@@ -192,8 +194,6 @@ export default function ChatScreen() {
                         result.assets[0].mimeType ?? 'application/octet-stream',
                 };
 
-                setSelectedFile(file as any);
-
                 Alert.alert(
                     'Xác nhận gửi file',
                     'Bạn có chắc chắn muốn gửi file này?',
@@ -201,7 +201,6 @@ export default function ChatScreen() {
                         {
                             text: 'Hủy',
                             style: 'cancel',
-                            onPress: () => setSelectedFile(null),
                         },
                         {
                             text: 'Gửi',
@@ -222,6 +221,20 @@ export default function ChatScreen() {
         setTimeout(() => {
             scrollViewRef.current?.scrollToEnd({ animated: false });
         }, 100);
+    }, []);
+
+    const handleEmojiSelect = useCallback(
+        (emoji: string) => setMessage(message + emoji),
+        [message],
+    );
+
+    const handleShowEmoji = useCallback(() => {
+        Keyboard.dismiss();
+        setIsOpenEmoji(true);
+    }, []);
+
+    const handleHideEmoji = useCallback(() => {
+        setIsOpenEmoji(false);
     }, []);
 
     useEffect(() => {
@@ -364,7 +377,10 @@ export default function ChatScreen() {
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
                 style={styles.inputContainer}
             >
-                <TouchableOpacity style={styles.emojiButton}>
+                <TouchableOpacity
+                    style={styles.emojiButton}
+                    onPress={handleShowEmoji}
+                >
                     <MaterialCommunityIcons
                         name='emoticon-outline'
                         size={24}
@@ -414,11 +430,22 @@ export default function ChatScreen() {
                     </Fragment>
                 )}
             </KeyboardAvoidingView>
+            {isOpenEmoji && (
+                <OutsidePressHandler
+                    style={styles.emojiContainer}
+                    onOutsidePress={handleHideEmoji}
+                >
+                    <EmojiSelector onEmojiSelected={handleEmojiSelect} />
+                </OutsidePressHandler>
+            )}
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
+    emojiContainer: {
+        height: 300,
+    },
     container: {
         flex: 1,
         backgroundColor: '#e5e5ea',
@@ -629,5 +656,13 @@ const styles = StyleSheet.create({
     },
     sendButtonText: {
         color: '#0084ff',
+    },
+    emojiSelectorOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.1)',
     },
 });
