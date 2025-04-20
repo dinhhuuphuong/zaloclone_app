@@ -92,7 +92,11 @@ const ProfileScreen = () => {
 
             setIsLoading(true);
             const formData = new FormData();
-            formData.append('avatar', file as any);
+            formData.append('avatar', {
+                uri: asset.uri,
+                name: 'avatar.jpg',
+                type: 'image/jpeg',
+            } as any);
 
             const success = await updateAvatar(formData);
             if (success) {

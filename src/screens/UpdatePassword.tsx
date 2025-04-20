@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import {
     Alert,
@@ -23,6 +24,7 @@ const UpdatePassword = () => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [errors, setErrors] = useState<Errors>({});
+    const navigation = useNavigation();
 
     const handleFinalSubmit = async () => {
         // Xử lý logic cập nhật mật khẩu ở đây
@@ -38,7 +40,9 @@ const UpdatePassword = () => {
         } catch (error: any) {
             Alert.alert(
                 'Lỗi',
-                error.data?.message || error.message || 'Mật khẩu không chính xác',
+                error.data?.message ||
+                    error.message ||
+                    'Mật khẩu không chính xác',
             );
         }
     };
@@ -154,6 +158,12 @@ const UpdatePassword = () => {
                             >
                                 <Text style={styles.buttonText}>Hoàn tất</Text>
                             </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.cancelButton]}
+                                onPress={() => navigation.goBack()}
+                            >
+                                <Text style={styles.cancelButtonText}>Hủy</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>
@@ -233,6 +243,17 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         color: 'white',
+        fontWeight: 'bold',
+    },
+    cancelButton: {
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'red',
+    },
+    cancelButtonText: {
+        color: 'red',
         fontWeight: 'bold',
     },
 });

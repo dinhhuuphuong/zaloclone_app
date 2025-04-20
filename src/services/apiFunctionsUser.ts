@@ -132,7 +132,7 @@ export const updatePassword = async (
 export const updateAvatar = async (formData: FormData) => {
     try {
         const response = await axiosInstance.put<IApiResponse<null>>(
-            '/users/update-avatar',
+            '/users/update',
             formData,
             {
                 headers: {
