@@ -327,9 +327,10 @@ export default function ChatScreen() {
                         )}
                         {conversation?.conversation.conversationType ===
                             'group' &&
-                            chat?.conversationID && (
+                            chat?.conversationID &&
+                            group[chat.conversationID] && (
                                 <Text style={styles.headerStatus}>
-                                    {group[chat.conversationID].length} thành
+                                    {group[chat.conversationID]?.length} thành
                                     viên
                                 </Text>
                             )}
