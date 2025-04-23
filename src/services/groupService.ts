@@ -4,12 +4,7 @@ import { User } from '../stores/groupStore';
 
 // Định nghĩa các interface
 export interface GroupResponse {
-    groupName: string;
-    createdAt: number;
-    destroy: boolean;
-    groupAvatar: string;
-    updatedAt: number;
-    groupID: string;
+    conversationID: string;
 }
 
 interface MessageResponse {
@@ -38,7 +33,11 @@ export const createGroup = async (
         formData.append('members', member);
     });
 
-    return axiosInstance.post<GroupResponse>('/groups/create', formData);
+    return axiosInstance.post<GroupResponse>('/groups/create', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
 };
 
 export const getGroupInfo = async (groupID: string): Promise<GroupResponse> => {

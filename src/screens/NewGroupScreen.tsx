@@ -1,8 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import * as ImagePicker from 'expo-image-picker';
+import { useCallback, useMemo, useState } from 'react';
 import {
+    Alert,
     FlatList,
     Image,
+    KeyboardAvoidingView,
+    Platform,
     StyleSheet,
     Text,
     TextInput,
@@ -11,22 +17,28 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useDebounce from '../hooks/useDebounce';
+import { RootStackParamList } from '../navigation/types';
+import { getConversations, getReceiver } from '../services/conversationService';
+import { createGroup, getGroupInfo } from '../services/groupService';
+import useChatStore from '../stores/chatStore';
+import useConversationsStore from '../stores/conversationsStore';
 import useFriendsStore from '../stores/friendsStore';
 import { IFriendRequest } from '../types/friend';
+import { SearchUserByPhoneNumber } from '../types/user';
+import { showError, toSearchUser } from '../utils';
 
-// Define types for our data
-type Contact = {
-    id: string;
-    name: string;
-    avatar: string;
-    lastSeen: string;
-    selected: boolean;
-};
+type NavigationProp = StackNavigationProp<RootStackParamList, 'ShareMessage'>;
 
 export default function NewGroupScreen() {
+    const navigation = useNavigation<NavigationProp>();
     const [searchQuery, setSearchQuery] = useState('');
     const { friends } = useFriendsStore();
     const [selectedIds, setSelectIds] = useState<Array<string>>([]);
+    const [groupName, setGroupName] = useState<string>('');
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [avatar, setAvatar] = useState<any>();
+    const { setConversations } = useConversationsStore();
+    const { setChat } = useChatStore();
 
     const searchDebounce = useDebounce(searchQuery);
 
@@ -57,37 +69,169 @@ export default function NewGroupScreen() {
         else setSelectIds((prev) => [...prev, id]);
     };
 
-    const renderContact = ({ item }: { item: IFriendRequest }) => (
-        <TouchableOpacity
-            style={styles.contactItem}
-            onPress={() => toggleContactSelection(item.userID)}
-        >
-            <View style={styles.checkboxContainer}>
-                <View
-                    style={[
-                        styles.checkbox,
-                        selectedIds.includes(item.userID) &&
-                            styles.checkboxSelected,
-                    ]}
-                >
-                    {selectedIds.includes(item.userID) && (
-                        <Ionicons name='checkmark' size={16} color='white' />
-                    )}
+    const handleBack = () => {
+        navigation.goBack();
+    };
+
+    const pickImage = async () => {
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 1,
+            });
+
+            if (!result.canceled && result.assets[0]) {
+                await handleChangeAvatar(result);
+            }
+        } catch (error) {
+            console.error('Error picking image:', error);
+            Alert.alert('Lỗi', 'Không thể chọn ảnh. Vui lòng thử lại.');
+        }
+    };
+
+    const handleChangeAvatar = async (result: any) => {
+        const asset = result.assets[0];
+        setAvatarPreview(asset.uri);
+
+        const response = await fetch(asset.uri);
+        const blob = await response.blob();
+
+        const file = {
+            uri: asset.uri,
+            name: 'avatar.jpg',
+            type: blob.type || 'image/jpeg',
+        };
+
+        setAvatar(file);
+    };
+
+    const renderContact = useCallback(
+        ({ item }: { item: IFriendRequest }) => (
+            <TouchableOpacity
+                style={styles.contactItem}
+                onPress={() => toggleContactSelection(item.userID)}
+            >
+                <View style={styles.checkboxContainer}>
+                    <View
+                        style={[
+                            styles.checkbox,
+                            selectedIds.includes(item.userID) &&
+                                styles.checkboxSelected,
+                        ]}
+                    >
+                        {selectedIds.includes(item.userID) && (
+                            <Ionicons
+                                name='checkmark'
+                                size={16}
+                                color='white'
+                            />
+                        )}
+                    </View>
                 </View>
-            </View>
-            <Image source={{ uri: item.avatar }} style={styles.avatar} />
-            <View style={styles.contactInfo}>
-                <Text style={styles.contactName}>{item.fullName}</Text>
-                <Text style={styles.lastSeen}>{item.phoneNumber}</Text>
-            </View>
-        </TouchableOpacity>
+                <Image source={{ uri: item.avatar }} style={styles.avatar} />
+                <View style={styles.contactInfo}>
+                    <Text style={styles.contactName}>{item.fullName}</Text>
+                    <Text style={styles.lastSeen}>{item.phoneNumber}</Text>
+                </View>
+            </TouchableOpacity>
+        ),
+        [selectedIds],
     );
+
+    const handleCreateGroup = async () => {
+        try {
+            const newGroup = await createGroup(groupName, selectedIds, avatar);
+
+            const results = await getConversations();
+            console.log('results', results);
+
+            const conversationsClone = [...results];
+            const conversationsValue = [...results];
+
+            const response = await Promise.all(
+                conversationsClone.map(
+                    (conversation) =>
+                        new Promise<
+                            SearchUserByPhoneNumber & {
+                                conversationId: string;
+                            }
+                        >((resolve) => {
+                            if (
+                                conversation.conversation.conversationType ===
+                                'single'
+                            )
+                                getReceiver(
+                                    conversation.conversation.conversationID,
+                                ).then((receiver) => {
+                                    resolve({
+                                        conversationId:
+                                            conversation.conversation
+                                                .conversationID,
+                                        ...receiver,
+                                    });
+                                });
+                            else
+                                getGroupInfo(
+                                    conversation.conversation.conversationID,
+                                ).then((receiver) => {
+                                    resolve({
+                                        conversationId:
+                                            conversation.conversation
+                                                .conversationID,
+                                        ...toSearchUser(receiver),
+                                    });
+                                });
+                        }),
+                ),
+            );
+
+            const conversations = conversationsValue.map((c) => ({
+                ...c,
+                conversation: {
+                    ...c.conversation,
+                    receiver: response.find(
+                        (value) =>
+                            value.conversationId ===
+                            c.conversation.conversationID,
+                    ),
+                },
+            }));
+
+            const conversation = conversations.find(
+                (conversation) =>
+                    conversation.conversation.conversationID ===
+                    newGroup.data.conversationID,
+            );
+
+            setConversations(conversations);
+
+            if (conversation) {
+                const receiver = conversation.conversation.receiver;
+
+                setChat({
+                    avatar: receiver?.avatar || '',
+                    fullName: receiver?.fullName || '',
+                    userID: receiver?.userID || '',
+                    conversationID: conversation.conversation.conversationID,
+                });
+
+                navigation.navigate('Chat');
+            }
+        } catch (error) {
+            showError(error, 'Tạo nhóm thất bại');
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity style={styles.closeButton}>
+                <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={handleBack}
+                >
                     <Ionicons name='close' size={24} color='black' />
                 </TouchableOpacity>
                 <View style={styles.headerTitleContainer}>
@@ -100,11 +244,25 @@ export default function NewGroupScreen() {
 
             {/* Group Info */}
             <View style={styles.groupInfoContainer}>
-                <TouchableOpacity style={styles.groupImageContainer}>
-                    <View style={styles.groupImagePlaceholder}>
-                        <Ionicons name='camera' size={24} color='#999' />
-                    </View>
+                <View style={styles.groupImageContainer}>
+                    <TouchableOpacity
+                        style={styles.groupImagePlaceholder}
+                        onPress={pickImage}
+                    >
+                        {avatarPreview ? (
+                            <Image
+                                source={{
+                                    uri: avatarPreview,
+                                }}
+                                style={styles.avatarPreview}
+                            />
+                        ) : (
+                            <Ionicons name='camera' size={24} color='#999' />
+                        )}
+                    </TouchableOpacity>
                     <TextInput
+                        value={groupName}
+                        onChangeText={setGroupName}
                         style={[
                             {
                                 flex: 1,
@@ -113,7 +271,7 @@ export default function NewGroupScreen() {
                         ]}
                         placeholder='Nhập tên nhóm...'
                     />
-                </TouchableOpacity>
+                </View>
             </View>
 
             {/* Search Bar */}
@@ -140,6 +298,51 @@ export default function NewGroupScreen() {
                 keyExtractor={(item) => item.userID}
                 contentContainerStyle={styles.listContent}
             />
+
+            {selectedCount > 0 && (
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.selectedContactsContainer}
+                >
+                    <View style={styles.selectedContactsPreview}>
+                        {selectedContacts.map((contact) => (
+                            <View
+                                key={contact.userID}
+                                style={styles.selectedContactItem}
+                            >
+                                <Image
+                                    source={{ uri: contact.avatar }}
+                                    style={styles.selectedAvatar}
+                                />
+                                <TouchableOpacity
+                                    style={styles.removeSelectedButton}
+                                    onPress={() =>
+                                        toggleContactSelection(contact.userID)
+                                    }
+                                >
+                                    <Ionicons
+                                        name='close'
+                                        size={16}
+                                        color='#666'
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        ))}
+                    </View>
+                    {groupName && selectedIds.length && avatar && (
+                        <TouchableOpacity
+                            style={styles.createButton}
+                            onPress={handleCreateGroup}
+                        >
+                            <Ionicons
+                                name='arrow-forward'
+                                size={24}
+                                color='white'
+                            />
+                        </TouchableOpacity>
+                    )}
+                </KeyboardAvoidingView>
+            )}
         </SafeAreaView>
     );
 }
@@ -275,5 +478,57 @@ const styles = StyleSheet.create({
     lastSeen: {
         fontSize: 14,
         color: '#999',
+    },
+    selectedContactsContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'white',
+        borderTopWidth: 1,
+        borderTopColor: '#e0e0e0',
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+    },
+    selectedContactsPreview: {
+        flex: 1,
+        flexDirection: 'row',
+    },
+    selectedContactItem: {
+        position: 'relative',
+        marginRight: 10,
+    },
+    selectedAvatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+    },
+    removeSelectedButton: {
+        position: 'absolute',
+        top: -5,
+        right: -5,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        width: 20,
+        height: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+    },
+    createButton: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#0084ff',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    avatarPreview: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
     },
 });
