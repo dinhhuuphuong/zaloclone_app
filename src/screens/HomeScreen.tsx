@@ -61,7 +61,7 @@ export default function HomeScreen() {
                 navigation.navigate('AddFriends');
                 break;
             case '2':
-                // Xử lý tạo nhóm
+                navigation.navigate('NewGroup');
                 break;
             // ... xử lý các case khác
         }

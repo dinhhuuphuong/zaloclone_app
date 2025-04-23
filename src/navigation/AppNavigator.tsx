@@ -8,6 +8,7 @@ import ChatScreen from '../screens/ChatScreen';
 import ForgotPassword from '../screens/ForgotPassword';
 import FriendRequestsScreen from '../screens/FriendRequestsScreen';
 import LoginScreen from '../screens/LoginScreen';
+import NewGroupScreen from '../screens/NewGroupScreen';
 import OtherUserProfile from '../screens/OtherUserProfile';
 import RegisterScreen from '../screens/RegisterScreen';
 import ShareMessage from '../screens/ShareMessageScreen';
@@ -84,6 +85,7 @@ const AppNavigator = () => {
                     component={FriendRequestsScreen}
                 />
                 <Stack.Screen name='ShareMessage' component={ShareMessage} />
+                <Stack.Screen name='NewGroup' component={NewGroupScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

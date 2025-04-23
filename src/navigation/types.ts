@@ -17,4 +17,5 @@ export type RootStackParamList = {
     OtherUserProfile: SearchUserByPhoneNumber;
     FriendRequests: undefined;
     ShareMessage: IMessage;
+    NewGroup: undefined;
 };
