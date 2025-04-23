@@ -14,6 +14,7 @@ export interface Conversation {
     lastMessageID: string;
     updatedAt: number;
     receiver?: IUserBase;
+    conversationType: 'single' | 'group';
 }
 
 export interface LastMessage {

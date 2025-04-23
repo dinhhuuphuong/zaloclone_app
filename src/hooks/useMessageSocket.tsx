@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { useSocket } from '../contexts/SocketContext';
 import { getConversations, getReceiver } from '../services/conversationService';
+import { getGroupInfo } from '../services/groupService';
 import { getMessagesByConversation } from '../services/messageService';
 import useConversationsStore from '../stores/conversationsStore';
 import useMessagesStore, { IMessage } from '../stores/messagesStore';
 import useUserStore from '../stores/userStore';
+import { toSearchUser } from '../utils';
 
 const useMessageSocket = () => {
     const { setMessages } = useMessagesStore();
@@ -37,16 +39,19 @@ const useMessageSocket = () => {
                 );
                 setMessages(conversationID, sortedMessages);
 
-                const conversation = (conversations ?? []).find(
+                const conversationRes = (conversations ?? []).find(
                     (conversation) =>
                         conversation.conversation.conversationID ===
                         conversationID,
                 );
 
-                if (!conversation) {
+                if (!conversationRes) {
                     const [results, user] = await Promise.all([
                         getConversations(),
-                        getReceiver(conversationID),
+                        conversationRes!.conversation.conversationType ===
+                        'single'
+                            ? getReceiver(conversationID)
+                            : getGroupInfo(conversationID),
                     ]);
                     const conversation = results.find(
                         (conversation) =>
@@ -59,7 +64,7 @@ const useMessageSocket = () => {
                     addConversation({
                         conversation: {
                             ...conversation.conversation,
-                            receiver: user,
+                            receiver: toSearchUser(user),
                         },
                         lastMessage: sortedMessages[sortedMessages.length - 1],
                     });

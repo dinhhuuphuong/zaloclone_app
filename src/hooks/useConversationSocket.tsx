@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useSocket } from '../contexts/SocketContext';
 import { getConversations, getReceiver } from '../services/conversationService';
+import { getGroupInfo } from '../services/groupService';
 import useConversationsStore from '../stores/conversationsStore';
 import useUserStore from '../stores/userStore';
 import { Conversation } from '../types/conversation';
 import { SearchUserByPhoneNumber } from '../types/user';
+import { toSearchUser } from '../utils';
 
 const useConversationSocket = () => {
     const [conversationList, setConversationList] = useState<Conversation[]>(
@@ -30,18 +32,33 @@ const useConversationSocket = () => {
                             SearchUserByPhoneNumber & {
                                 conversationId: string;
                             }
-                        >((resolve) =>
-                            getReceiver(
-                                conversation.conversation.conversationID,
-                            ).then((receiver) => {
-                                resolve({
-                                    conversationId:
-                                        conversation.conversation
-                                            .conversationID,
-                                    ...receiver,
+                        >((resolve) => {
+                            if (
+                                conversation.conversation.conversationType ===
+                                'single'
+                            )
+                                getReceiver(
+                                    conversation.conversation.conversationID,
+                                ).then((receiver) => {
+                                    resolve({
+                                        conversationId:
+                                            conversation.conversation
+                                                .conversationID,
+                                        ...receiver,
+                                    });
                                 });
-                            }),
-                        ),
+                            else
+                                getGroupInfo(
+                                    conversation.conversation.conversationID,
+                                ).then((receiver) => {
+                                    resolve({
+                                        conversationId:
+                                            conversation.conversation
+                                                .conversationID,
+                                        ...toSearchUser(receiver),
+                                    });
+                                });
+                        }),
                 ),
             );
 

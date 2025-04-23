@@ -10,7 +10,14 @@ import { useNavigation } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import {
+    Fragment,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import {
     Alert,
     Image,
@@ -29,6 +36,7 @@ import EmojiSelector from 'react-native-emoji-selector';
 import OutsidePressHandler from 'react-native-outside-press';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Message from '../components/Message';
+import { getMembersOfGroup } from '../services/groupService';
 import {
     getMessagesByConversation,
     sendFiles,
@@ -36,8 +44,10 @@ import {
 } from '../services/messageService';
 import useChatStore from '../stores/chatStore';
 import useConversationsStore from '../stores/conversationsStore';
+import useGroupStore from '../stores/groupStore';
 import useMessagesStore from '../stores/messagesStore';
 import useUserOnlineStore from '../stores/userOnlineStore';
+import { toGroupMembers } from '../utils';
 
 export default function ChatScreen() {
     const [message, setMessage] = useState('');
@@ -47,14 +57,26 @@ export default function ChatScreen() {
     const [selection, setSelection] = useState({ start: 0, end: 0 });
     const navigation = useNavigation();
     const { chat, setConversationID } = useChatStore();
+    const { group, setMembers } = useGroupStore();
     const { userOnline } = useUserOnlineStore();
     const isOnline = userOnline?.userIds.includes(chat?.userID ?? '');
     const { conversations, setMessages } = useMessagesStore();
     const messages = conversations[chat?.conversationID ?? ''] ?? [];
-    const { addConversation } = useConversationsStore();
+    const { addConversation, conversations: conversationList } =
+        useConversationsStore();
     const scrollViewRef = useRef<ScrollView>(null);
     const [isOpenEmoji, setIsOpenEmoji] = useState<boolean>(false);
     const inputRef = useRef<TextInput>(null);
+    const conversation = useMemo(() => {
+        if (!conversationList) return null;
+
+        return conversationList.find(
+            (conversation) =>
+                conversation.conversation.conversationID ===
+                chat?.conversationID,
+        );
+    }, [conversationList, chat?.conversationID]);
+    console.log('members', chat?.conversationID && group[chat?.conversationID]);
 
     const handleMessageChange = useCallback((text: string) => {
         setMessage(text);
@@ -266,6 +288,22 @@ export default function ChatScreen() {
         scrollToBottom();
     }, [chat?.conversationID]);
 
+    useEffect(() => {
+        const fetchMembers = async (id: string) => {
+            const res = await getMembersOfGroup(id);
+
+            setMembers(id, toGroupMembers(res));
+        };
+
+        if (
+            conversation?.conversation?.conversationID &&
+            conversation?.conversation?.conversationType === 'group' &&
+            !group[conversation?.conversation?.conversationID]
+        ) {
+            fetchMembers(conversation?.conversation?.conversationID);
+        }
+    }, [conversation?.conversation?.conversationID]);
+
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <StatusBar backgroundColor='#0084ff' />
@@ -281,9 +319,20 @@ export default function ChatScreen() {
                     </TouchableOpacity>
                     <View>
                         <Text style={styles.headerName}>{chat?.fullName}</Text>
-                        <Text style={styles.headerStatus}>
-                            {isOnline ? 'Online' : 'Offline'}
-                        </Text>
+                        {conversation?.conversation.conversationType ===
+                            'single' && (
+                            <Text style={styles.headerStatus}>
+                                {isOnline ? 'Online' : 'Offline'}
+                            </Text>
+                        )}
+                        {conversation?.conversation.conversationType ===
+                            'group' &&
+                            chat?.conversationID && (
+                                <Text style={styles.headerStatus}>
+                                    {group[chat.conversationID].length} thành
+                                    viên
+                                </Text>
+                            )}
                     </View>
                 </View>
                 <View style={styles.headerRight}>

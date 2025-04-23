@@ -1,5 +1,8 @@
 import { differenceInHours, format } from 'date-fns';
 import { Alert } from 'react-native';
+import { GroupResponse } from '../services/groupService';
+import { User } from '../stores/groupStore';
+import { SearchUserByPhoneNumber } from '../types/user';
 
 export function showError(
     error: any,
@@ -18,4 +21,39 @@ export const parseTimestamp = (timestamp: number) => {
     } else {
         return format(date, 'hh:mm a');
     }
+};
+
+export const toSearchUser = (
+    user: GroupResponse | SearchUserByPhoneNumber,
+): SearchUserByPhoneNumber => {
+    if ((user as SearchUserByPhoneNumber).userID)
+        return user as SearchUserByPhoneNumber;
+
+    const userGroup = user as GroupResponse;
+
+    return {
+        userID: userGroup.groupID,
+        fullName: userGroup.groupName,
+        phoneNumber: '',
+        avatar: userGroup.groupAvatar,
+        createAt: userGroup.createdAt,
+        updateAt: userGroup.updatedAt,
+        dayOfBirth: '',
+        gender: true,
+        destroy: userGroup.destroy,
+        passWord: '',
+        role: '',
+        slug: '',
+    };
+};
+
+export const toGroupMembers = (
+    users: {
+        groupID: string;
+        userInfo: User;
+    }[],
+): Array<User> => {
+    if (users.length === 0) return [];
+
+    return users.map((item) => item.userInfo);
 };

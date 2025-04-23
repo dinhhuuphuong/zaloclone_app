@@ -24,15 +24,11 @@ import {
     getFriendRequests,
     getSentFriendRequests,
 } from '../services/apiFunctionFriend';
-import { getConversations, getReceiver } from '../services/conversationService';
 import useChatStore from '../stores/chatStore';
-import useConversationsStore, {
-    IConversation,
-} from '../stores/conversationsStore';
+import useConversationsStore from '../stores/conversationsStore';
 import useFriendRequestsStore from '../stores/friendRequestsStore';
 import useFriendsStore from '../stores/friendsStore';
 import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
-import { SearchUserByPhoneNumber } from '../types/user';
 import { parseTimestamp } from '../utils';
 
 const StyledView = styled(View);
@@ -238,14 +234,15 @@ export default function HomeScreen() {
                                         {item.conversation.receiver?.fullName}
                                     </Text>
                                     <Text style={styles.message}>
-                                        {item.lastMessage.messageContent}
+                                        {item.lastMessage?.messageContent}
                                     </Text>
                                 </View>
                                 <Text style={styles.time}>
-                                    {parseTimestamp(
-                                        item.lastMessage.updatedAt ??
-                                            item.lastMessage.createdAt,
-                                    )}
+                                    {item.lastMessage &&
+                                        parseTimestamp(
+                                            item.lastMessage?.updatedAt ??
+                                                item.lastMessage?.createdAt,
+                                        )}
                                 </Text>
                             </View>
                         </TouchableOpacity>

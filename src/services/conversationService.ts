@@ -2,10 +2,6 @@ import axiosInstance from '../configs/axiosClient';
 import { IConversation } from '../stores/conversationsStore';
 import { SearchUserByPhoneNumber } from '../types/user';
 
-interface User {
-    id: string;
-}
-
 export interface IHaveTheyChatted {
     convDetails: ConvDetails;
 }
@@ -17,6 +13,7 @@ export interface ConvDetails {
     lastMessageID: string;
     userID: string;
     updatedAt: number;
+    conversationType: 'single' | 'group';
 }
 
 export const getConversations = async (): Promise<IConversation[]> => {
