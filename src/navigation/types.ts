@@ -18,4 +18,5 @@ export type RootStackParamList = {
     FriendRequests: undefined;
     ShareMessage: IMessage;
     NewGroup: undefined;
+    SplashScreen: undefined;
 };

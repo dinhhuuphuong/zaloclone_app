@@ -33,6 +33,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
             const connectSocket = io(process.env.EXPO_PUBLIC_SOCKET_ENDPOINT, {
                 query: {
                     userId: user.userID,
+                    deviceType: 'mobile',
                 },
                 reconnection: true,
                 reconnectionAttempts: 5,

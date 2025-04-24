@@ -10,11 +10,13 @@
         "dev:tailwind": "tailwindcss --input input.css --output tailwind.css --no-autoprefixer --watch"
     },
     "dependencies": {
+        "@expo-google-fonts/poppins": "^0.3.0",
         "@expo/vector-icons": "^14.1.0",
         "@react-native-async-storage/async-storage": "^1.24.0",
         "@react-native-firebase/auth": "^21.13.0",
         "@react-navigation/bottom-tabs": "^7.3.10",
         "@react-navigation/native": "^7.1.6",
+        "@react-navigation/native-stack": "^7.3.10",
         "@react-navigation/stack": "^7.2.10",
         "@types/socket.io-client": "^1.4.36",
         "axios": "^1.8.4",
@@ -23,6 +25,8 @@
         "expo-document-picker": "^13.0.3",
         "expo-firebase-recaptcha": "^2.3.1",
         "expo-image-picker": "^16.0.6",
+        "expo-linear-gradient": "^14.0.2",
+        "expo-splash-screen": "^0.29.24",
         "expo-status-bar": "~2.0.1",
         "expo-system-ui": "~4.0.9",
         "expo-video": "^2.0.6",

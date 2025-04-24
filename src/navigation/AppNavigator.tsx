@@ -1,7 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import AddFriendScreen from '../screens/AddFriendScreen';
 import AddFriendsScreen from '../screens/AddFriendsScreen';
 import ChatScreen from '../screens/ChatScreen';
@@ -12,47 +11,14 @@ import NewGroupScreen from '../screens/NewGroupScreen';
 import OtherUserProfile from '../screens/OtherUserProfile';
 import RegisterScreen from '../screens/RegisterScreen';
 import ShareMessage from '../screens/ShareMessageScreen';
+import SplashScreen from '../screens/SplashScreen';
 import UpdatePassword from '../screens/UpdatePassword';
-import { getCurrentUser } from '../services/authService';
-import useUserStore from '../stores/userStore';
 import MainTabNavigator from './MainTabNavigator';
 import { RootStackParamList } from './types';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(false);
-    const { setUser } = useUserStore();
-
-    useEffect(() => {
-        // Kiểm tra trạng thái đăng nhập từ AsyncStorage
-        const checkLoginStatus = async () => {
-            try {
-                const userToken = await AsyncStorage.getItem('accessToken');
-
-                if (!userToken) {
-                    setIsLoggedIn(false);
-                    return;
-                }
-
-                const user = await getCurrentUser();
-
-                if (user) setUser(user);
-                setIsLoggedIn(!!userToken);
-            } catch (error) {
-                console.error('Lỗi khi kiểm tra đăng nhập:', error);
-                setIsLoggedIn(false);
-            }
-        };
-
-        checkLoginStatus();
-    }, []);
-
-    // Hiển thị màn hình loading khi đang kiểm tra trạng thái đăng nhập
-    if (isLoggedIn === null) {
-        return null; // Hoặc màn hình loading
-    }
-
     return (
         <NavigationContainer>
             <Stack.Navigator
@@ -60,7 +26,7 @@ const AppNavigator = () => {
                     headerShown: false,
                     cardStyle: { backgroundColor: '#fff' },
                 }}
-                initialRouteName={isLoggedIn ? 'Home' : 'Login'}
+                initialRouteName={'SplashScreen'}
             >
                 <Stack.Screen name='Home' component={MainTabNavigator} />
                 <Stack.Screen name='Login' component={LoginScreen} />
@@ -86,6 +52,7 @@ const AppNavigator = () => {
                 />
                 <Stack.Screen name='ShareMessage' component={ShareMessage} />
                 <Stack.Screen name='NewGroup' component={NewGroupScreen} />
+                <Stack.Screen name='SplashScreen' component={SplashScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

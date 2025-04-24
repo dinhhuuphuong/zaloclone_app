@@ -16,6 +16,7 @@ import {
 import { useChat } from '../hooks/useChat';
 import useConversationSocket from '../hooks/useConversationSocket';
 import useFriendRequestSocket from '../hooks/useFriendRequestSocket';
+import useMemberOfGroupSocket from '../hooks/useMemberOfGroupSocket';
 import useMessageSocket from '../hooks/useMessageSocket';
 import useSocketOnlineStatus from '../hooks/useSocketOnlineStatus';
 import { RootStackParamList } from '../navigation/types';
@@ -72,6 +73,7 @@ export default function HomeScreen() {
     useFriendRequestSocket();
     useConversationSocket();
     useChat();
+    useMemberOfGroupSocket();
 
     useEffect(() => {
         const fetchData = async () => {
