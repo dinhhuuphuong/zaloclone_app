@@ -8,21 +8,14 @@ import {
 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/types';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
-import {
-    Fragment,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
     Alert,
     Image,
-    Keyboard,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -32,13 +25,10 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    Keyboard,
 } from 'react-native';
-import EmojiSelector from 'react-native-emoji-selector';
-import OutsidePressHandler from 'react-native-outside-press';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Message from '../components/Message';
-import { RootStackParamList } from '../navigation/types';
-import { getMembersOfGroup } from '../services/groupService';
 import {
     getMessagesByConversation,
     sendFiles,
@@ -46,42 +36,27 @@ import {
 } from '../services/messageService';
 import useChatStore from '../stores/chatStore';
 import useConversationsStore from '../stores/conversationsStore';
-import useGroupStore from '../stores/groupStore';
 import useMessagesStore from '../stores/messagesStore';
 import useUserOnlineStore from '../stores/userOnlineStore';
-import { toGroupMembers } from '../utils';
-
-type NavigationProp = StackNavigationProp<RootStackParamList, 'Options'>;
+import EmojiSelector from 'react-native-emoji-selector';
+import { User } from '../stores/userStore';
 
 export default function ChatScreen() {
     const [message, setMessage] = useState('');
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [files, setFiles] = useState<File[]>([]);
     const [showImagePreview, setShowImagePreview] = useState(false);
-    const [selection, setSelection] = useState({ start: 0, end: 0 });
-    const navigation = useNavigation<NavigationProp>();
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
     const { chat, setConversationID } = useChatStore();
-    const { group, setMembers } = useGroupStore();
     const { userOnline } = useUserOnlineStore();
     const isOnline = userOnline?.userIds.includes(chat?.userID ?? '');
     const { conversations, setMessages } = useMessagesStore();
     const messages = conversations[chat?.conversationID ?? ''] ?? [];
-    const { addConversation, conversations: conversationList } =
-        useConversationsStore();
+    const { addConversation } = useConversationsStore();
     const scrollViewRef = useRef<ScrollView>(null);
-    const [isOpenEmoji, setIsOpenEmoji] = useState<boolean>(false);
-    const inputRef = useRef<TextInput>(null);
-    const conversation = useMemo(() => {
-        if (!conversationList) return null;
-
-        return conversationList.find(
-            (conversation) =>
-                conversation.conversation.conversationID ===
-                chat?.conversationID,
-        );
-    }, [conversationList, chat?.conversationID]);
-    console.log('members', chat?.conversationID && group[chat?.conversationID]);
-    const isGroup = conversation?.conversation.conversationType === 'group';
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const TextInputRef = useRef<TextInput>(null);
 
     const handleMessageChange = useCallback((text: string) => {
         setMessage(text);
@@ -143,20 +118,16 @@ export default function ChatScreen() {
     }, [message, chat]);
 
     const pickImage = useCallback(async () => {
-        const { status } =
-            await ImagePicker.requestMediaLibraryPermissionsAsync();
-
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
             alert('Xin lỗi, chúng tôi cần quyền truy cập thư viện ảnh!');
             return;
         }
-
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsMultipleSelection: true,
             quality: 1,
         });
-
         if (!result.canceled) {
             const newImages = result.assets.map((asset) => asset.uri);
             setSelectedImages(newImages);
@@ -166,47 +137,38 @@ export default function ChatScreen() {
                 result.assets.map(async (asset) => {
                     const response = await fetch(asset.uri);
                     const blob = await response.blob();
-
                     const file = {
                         uri: asset.uri,
                         name: 'image.jpg',
                         type: blob.type || 'image/jpeg',
                     };
-
                     return file;
-                }),
+                })
             );
-
             setFiles(newFiles as any[]);
         }
     }, []);
 
-    const handleSendFiles = useCallback(
-        async (file: File) => {
-            try {
-                const response = await sendFiles(chat?.userID ?? '', [
-                    file as any,
-                ]);
+    const handleSendFiles = useCallback(async (file: File) => {
+        try {
+            const response = await sendFiles(chat?.userID ?? '', [file as any]);
+            setSelectedFile(null);
 
-                if (response.createConversation?.conversationID) {
-                    setConversationID(
-                        response.createConversation.conversationID,
-                    );
-                    addConversation({
-                        conversation: {
-                            ...response.createConversation,
-                            receiver: chat,
-                        },
-                        lastMessage: response.createNewMessage,
-                    });
-                }
-            } catch (err) {
-                console.error('Lỗi khi gửi file:', err);
-                alert('Có lỗi xảy ra khi gửi file');
+            if (response.createConversation?.conversationID) {
+                setConversationID(response.createConversation.conversationID);
+                addConversation({
+                    conversation: {
+                        ...response.createConversation,
+                        receiver: chat,
+                    },
+                    lastMessage: response.createNewMessage,
+                });
             }
-        },
-        [chat],
-    );
+        } catch (err) {
+            console.error('Lỗi khi gửi file:', err);
+            alert('Có lỗi xảy ra khi gửi file');
+        }
+    }, [chat]);
 
     const pickFile = useCallback(async () => {
         try {
@@ -214,31 +176,17 @@ export default function ChatScreen() {
                 type: '*/*',
                 copyToCacheDirectory: true,
             });
-
             if (!result.canceled) {
                 const file = {
                     uri: result.assets[0].uri,
                     name: result.assets[0].name,
-                    type:
-                        result.assets[0].mimeType ?? 'application/octet-stream',
+                    type: result.assets[0].mimeType ?? 'application/octet-stream',
                 };
-
-                Alert.alert(
-                    'Xác nhận gửi file',
-                    'Bạn có chắc chắn muốn gửi file này?',
-                    [
-                        {
-                            text: 'Hủy',
-                            style: 'cancel',
-                        },
-                        {
-                            text: 'Gửi',
-                            onPress: async () => {
-                                await handleSendFiles(file as any);
-                            },
-                        },
-                    ],
-                );
+                setSelectedFile(file as any);
+                Alert.alert('Xác nhận gửi file', 'Bạn có chắc chắn muốn gửi file này?', [
+                    { text: 'Hủy', style: 'cancel', onPress: () => setSelectedFile(null) },
+                    { text: 'Gửi', onPress: async () => await handleSendFiles(file as any) },
+                ]);
             }
         } catch (err) {
             console.error('Lỗi khi chọn file:', err);
@@ -252,39 +200,12 @@ export default function ChatScreen() {
         }, 100);
     }, []);
 
-    const handleEmojiSelect = useCallback(
-        (emoji: string) => {
-            const newText =
-                message.substring(0, selection.start) +
-                emoji +
-                message.substring(selection.end);
-            setMessage(newText);
-            const newPosition = selection.start + emoji.length;
-            setSelection({ start: newPosition, end: newPosition });
-        },
-        [message, selection],
-    );
-
-    const handleShowEmoji = useCallback(() => {
-        Keyboard.dismiss();
-        setIsOpenEmoji(true);
-    }, []);
-
-    const handleHideEmoji = useCallback(() => {
-        setIsOpenEmoji(false);
-    }, []);
-
     useEffect(() => {
         const fetchMessages = async () => {
             if (!chat?.conversationID) return;
-
-            const response = await getMessagesByConversation(
-                chat.conversationID,
-            );
-
+            const response = await getMessagesByConversation(chat.conversationID);
             setMessages(chat.conversationID, [...response].reverse());
         };
-
         fetchMessages();
     }, [chat?.conversationID]);
 
@@ -292,26 +213,7 @@ export default function ChatScreen() {
         if (!chat?.conversationID) return;
         scrollToBottom();
     }, [chat?.conversationID]);
-
-    useEffect(() => {
-        const fetchMembers = async (id: string) => {
-            const res = await getMembersOfGroup(id);
-
-            setMembers(id, toGroupMembers(res));
-        };
-
-        if (
-            conversation?.conversation?.conversationID &&
-            conversation?.conversation?.conversationType === 'group' &&
-            !group[conversation?.conversation?.conversationID]
-        ) {
-            fetchMembers(conversation?.conversation?.conversationID);
-        }
-    }, [conversation?.conversation?.conversationID]);
-
-    useEffect(() => {
-        if (!chat) navigation.navigate('Home');
-    }, [chat]);
+    
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
@@ -326,24 +228,24 @@ export default function ChatScreen() {
                     >
                         <Ionicons name='chevron-back' size={24} color='white' />
                     </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => {
+                            if (chat) {
+                                navigation.navigate('OtherUserProfile', {
+                                    userID: chat.userID,
+                                    fullName: chat.fullName || '',
+                                    avatar: chat.avatar || '',
+                                } as User);
+                            }
+                        }}
+                    >
                     <View>
                         <Text style={styles.headerName}>{chat?.fullName}</Text>
-                        {conversation?.conversation.conversationType ===
-                            'single' && (
-                            <Text style={styles.headerStatus}>
-                                {isOnline ? 'Online' : 'Offline'}
-                            </Text>
-                        )}
-                        {conversation?.conversation.conversationType ===
-                            'group' &&
-                            chat?.conversationID &&
-                            group[chat.conversationID] && (
-                                <Text style={styles.headerStatus}>
-                                    {group[chat.conversationID]?.length} thành
-                                    viên
-                                </Text>
-                            )}
+                        <Text style={styles.headerStatus}>
+                            {isOnline ? 'Online' : 'Offline'}
+                        </Text>
                     </View>
+                </TouchableOpacity>
                 </View>
                 <View style={styles.headerRight}>
                     <TouchableOpacity style={styles.headerButton}>
@@ -356,18 +258,13 @@ export default function ChatScreen() {
                             color='white'
                         />
                     </TouchableOpacity>
-                    {isGroup && (
-                        <TouchableOpacity
-                            style={styles.headerButton}
-                            onPress={() => navigation.navigate('Options')}
-                        >
-                            <SimpleLineIcons
-                                name='options-vertical'
-                                size={20}
-                                color='white'
-                            />
-                        </TouchableOpacity>
-                    )}
+                    <TouchableOpacity style={styles.headerButton}>
+                        <SimpleLineIcons
+                            name='options-vertical'
+                            size={20}
+                            color='white'
+                        />
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -449,82 +346,81 @@ export default function ChatScreen() {
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-                style={styles.inputContainer}
+                style={{ flex: 0 }}
             >
-                <TouchableOpacity
-                    style={styles.emojiButton}
-                    onPress={handleShowEmoji}
-                >
-                    <MaterialCommunityIcons
-                        name='emoticon-outline'
-                        size={24}
-                        color='#666'
-                    />
-                </TouchableOpacity>
-                <TextInput
-                    ref={inputRef}
-                    style={styles.input}
-                    placeholder='Message'
-                    placeholderTextColor='#999'
-                    value={message}
-                    onChangeText={handleMessageChange}
-                    onSelectionChange={(e) =>
-                        setSelection(e.nativeEvent.selection)
-                    }
-                    selection={selection}
-                    multiline
-                />
-                {message ? (
+                <View style={styles.inputContainer}>
                     <TouchableOpacity
-                        style={styles.sendButton}
-                        onPress={handleSendTextMessage}
+                        style={styles.emojiButton}
+                        onPress={() => {
+                            if (showEmojiPicker) {
+                                setShowEmojiPicker(false);
+                                setTimeout(() => TextInputRef.current?.focus(), 100);
+                            } else {
+                                Keyboard.dismiss();
+                                setTimeout(() => setShowEmojiPicker(true), 100);
+                            }
+                        }}
                     >
-                        <Ionicons name='send' size={24} color='#0084ff' />
+                        <MaterialCommunityIcons name='emoticon-outline' size={24} color='#666' />
                     </TouchableOpacity>
-                ) : (
-                    <Fragment>
-                        <TouchableOpacity
-                            style={styles.moreButton}
-                            onPress={pickImage}
+
+                    <TextInput
+                        ref={TextInputRef}
+                        style={styles.input}
+                        placeholder='Message'
+                        placeholderTextColor='#999'
+                        value={message}
+                        onChangeText={handleMessageChange}
+                        multiline
+                        onFocus={() => setShowEmojiPicker(false)}
+                    />
+
+                    {message ? (
+                        <TouchableOpacity 
+                            style={styles.sendButton}
+                            onPress={handleSendTextMessage}
                         >
-                            <Feather name='image' size={24} color='#666' />
+                            <Ionicons name='send' size={24} color='#0084ff' />
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.voiceButton}>
-                            <FontAwesome
-                                name='microphone'
-                                size={24}
-                                color='#666'
-                            />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.stickerButton}
-                            onPress={pickFile}
-                        >
-                            <MaterialIcons
-                                name='attach-file'
-                                size={24}
-                                color='#666'
-                            />
-                        </TouchableOpacity>
-                    </Fragment>
-                )}
+                    ) : (
+                        <>
+                            <TouchableOpacity 
+                                style={styles.moreButton}
+                                onPress={pickImage}
+                            >
+                                <Feather name='image' size={24} color='#666' />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.voiceButton}>
+                                <FontAwesome name='microphone' size={24} color='#666' />
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={styles.stickerButton}
+                                onPress={pickFile}
+                            >
+                                <MaterialIcons name='attach-file' size={24} color='#666' />
+                            </TouchableOpacity>
+                        </>
+                    )}
+                </View>
             </KeyboardAvoidingView>
-            {isOpenEmoji && (
-                <OutsidePressHandler
-                    style={styles.emojiContainer}
-                    onOutsidePress={handleHideEmoji}
-                >
-                    <EmojiSelector onEmojiSelected={handleEmojiSelect} />
-                </OutsidePressHandler>
+
+            {showEmojiPicker && (
+                <View style={{ height: 250 }}>
+                    <EmojiSelector
+                        onEmojiSelected={(emoji) => setMessage((prev) => prev + emoji)}
+                        showSearchBar={false}
+                        showTabs
+                        showSectionTitles={false}
+                        columns={8}
+                    />
+                </View>
             )}
         </SafeAreaView>
     );
 }
 
+
 const styles = StyleSheet.create({
-    emojiContainer: {
-        height: 300,
-    },
     container: {
         flex: 1,
         backgroundColor: '#e5e5ea',
@@ -735,13 +631,5 @@ const styles = StyleSheet.create({
     },
     sendButtonText: {
         color: '#0084ff',
-    },
-    emojiSelectorOverlay: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.1)',
     },
 });

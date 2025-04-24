@@ -3,7 +3,6 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useMemo } from 'react';
 import {
-    Alert,
     Dimensions,
     Image,
     ImageBackground,
@@ -15,18 +14,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
-import {
-    acceptFriendRequest,
-    cancelFriendRequest,
-    declineFriendRequest,
-} from '../services/apiFunctionFriend';
+import { cancelFriendRequest } from '../services/apiFunctionFriend';
 import { haveTheyChatted } from '../services/conversationService';
 import useChatStore from '../stores/chatStore';
 import useFriendRequestsStore from '../stores/friendRequestsStore';
 import useFriendsStore from '../stores/friendsStore';
-import useGroupStore from '../stores/groupStore';
 import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
 import { showError } from '../utils';
+import { SearchUserByPhoneNumber } from '../types/user';
+import { useState } from 'react';
+import { Modal, Alert } from 'react-native';
+import { deleteFriend, getFriendList } from "../services/apiFunctionFriend";
 
 // Define types for suggested friends
 type SuggestedFriend = {
@@ -44,14 +42,15 @@ const RECEIVED = 2;
 const FRIEND = 3;
 
 export default function OtherUserProfile() {
-    const { friendRequests, setFriendRequests } = useFriendRequestsStore();
-    const { friends, setFriends } = useFriendsStore();
     const { setChat } = useChatStore();
-    const { reset } = useGroupStore();
+    const { friends, setFriends } = useFriendsStore();
     const { sentRequests, setSentRequests } = useSentFriendRequestsStore();
+    const { friendRequests } = useFriendRequestsStore();
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<RouteProps>();
     const userInfo = route.params;
+    const [showMenu, setShowMenu] = useState(false);
+    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const relationshipStatus = useMemo(() => {
         const isFriend = friends.some(
             (friend) => friend.userID === userInfo.userID,
@@ -75,25 +74,15 @@ export default function OtherUserProfile() {
     }, [friends, sentRequests, friendRequests, userInfo.userID]);
 
     const handleToChatScreen = async () => {
-        try {
-            const response = await haveTheyChatted(userInfo.userID);
+        const response = await haveTheyChatted(userInfo.userID);
 
-            setChat({
-                ...userInfo,
-                conversationID: response
-                    ? response.convDetails.conversationID
-                    : userInfo.userID,
-            });
-            reset();
-            navigation.navigate('Chat');
-        } catch (error) {
-            setChat({
-                ...userInfo,
-                conversationID: userInfo.userID,
-            });
-            reset();
-            navigation.navigate('Chat');
-        }
+        setChat({
+            ...userInfo,
+            conversationID: response
+                ? response.convDetails.conversationID
+                : undefined,
+        });
+        navigation.navigate('Chat');
     };
 
     // Sample data for suggested friends
@@ -119,38 +108,12 @@ export default function OtherUserProfile() {
         navigation.goBack();
     };
 
-    const handleDecline = async () => {
-        try {
-            await declineFriendRequest(userInfo.userID);
-
-            setFriendRequests(
-                friendRequests.filter(
-                    (request) => request.userID !== userInfo.userID,
-                ),
-            );
-
-            Alert.alert('Success', 'Đã từ chối lời mời kết bạn');
-        } catch (error) {
-            showError(error, 'Decline request failed');
-        }
+    const handleDecline = () => {
+        console.log('Decline');
     };
 
-    const handleAccept = async () => {
-        try {
-            await acceptFriendRequest(userInfo.userID);
-
-            setFriendRequests(
-                friendRequests.filter(
-                    (request) => request.userID !== userInfo.userID,
-                ),
-            );
-
-            setFriends([...friends, userInfo]);
-
-            Alert.alert('Success', 'Đã chấp nhận lời mời kết bạn');
-        } catch (error) {
-            showError(error, 'Decline request failed');
-        }
+    const handleAccept = () => {
+        console.log('Accept');
     };
 
     const handleRecall = async (id: string) => {
@@ -162,6 +125,24 @@ export default function OtherUserProfile() {
             );
         } catch (error) {
             showError(error, 'Recall request failed');
+        }
+    };
+    const handleRemoveFriend = async (friendID: string) => {
+        try {
+            await deleteFriend(friendID);
+            // Cập nhật danh sách bạn bè
+            setFriends(friends.filter((friend) => friend.userID !== friendID));
+            // Đóng modal xác nhận
+            setShowDeleteConfirmation(false);
+            // Hiển thị thông báo thành công
+            Alert.alert("Thông báo", "Xóa bạn thành công");
+            // Quay về màn hình trước đó
+            navigation.goBack();
+        } catch (error) {
+            console.log("handleRemoveFriend", error);
+            // Hiển thị thông báo lỗi
+            Alert.alert("Lỗi", "Xóa bạn thất bại. Vui lòng thử lại sau.");
+            setShowDeleteConfirmation(false);
         }
     };
 
@@ -192,13 +173,31 @@ export default function OtherUserProfile() {
                                     color='white'
                                 />
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.headerButton}>
+                            <TouchableOpacity 
+                                style={styles.headerButton}
+                                onPress={() => setShowMenu(!showMenu)}
+                            >
                                 <Feather
                                     name='more-horizontal'
                                     size={24}
                                     color='white'
                                 />
                             </TouchableOpacity>
+
+                            {/* Menu Popup */}
+                            {showMenu && (
+                                <View style={styles.menuPopup}>
+                                    <TouchableOpacity 
+                                        style={styles.menuItem}
+                                        onPress={() => {
+                                            setShowMenu(false);
+                                            setShowDeleteConfirmation(true);
+                                        }}
+                                    >
+                                        <Text style={styles.deleteText}>Xóa bạn</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
                         </View>
                     </View>
 
@@ -258,9 +257,27 @@ export default function OtherUserProfile() {
                         {relationshipStatus === NOT_FRIEND && (
                             <TouchableOpacity
                                 style={styles.addFriendButton}
-                                onPress={() =>
-                                    navigation.navigate('AddFriend', userInfo)
-                                }
+                                onPress={() => {
+                                    if ('role' in userInfo) { 
+                                        const searchUser: SearchUserByPhoneNumber = {
+                                            userID: userInfo.userID,
+                                            fullName: userInfo.fullName || '',
+                                            avatar: userInfo.avatar || '',
+                                            phoneNumber: userInfo.phoneNumber || '',
+                                            destroy: false,
+                                            passWord: '',
+                                            createAt: 'role' in userInfo ? userInfo.createAt || 0 : 0,
+                                            dayOfBirth: 'role' in userInfo ? userInfo.dayOfBirth || '' : '',
+                                            gender: 'role' in userInfo ? userInfo.gender || false : false,
+                                            role: 'role' in userInfo ? userInfo.role || '' : '',
+                                            slug: 'role' in userInfo ? userInfo.slug || '' : '',
+                                            updateAt: 'role' in userInfo ? userInfo.updateAt || 0 : 0,
+                                        };
+                                        navigation.navigate('AddFriend', searchUser);
+                                    } else {
+                                        navigation.navigate('AddFriend', userInfo);
+                                    }
+                                }}
                             >
                                 <Ionicons
                                     name='person-add'
@@ -363,6 +380,34 @@ export default function OtherUserProfile() {
                     </View>
                 </View>
             </ScrollView>
+            <Modal
+                visible={showDeleteConfirmation}
+                transparent={true}
+                animationType="fade"
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.confirmationModal}>
+                        <Text style={styles.confirmationTitle}>Xóa bạn</Text>
+                        <Text style={styles.confirmationMessage}>
+                            Bạn chắc chắn muốn xóa {userInfo.fullName} khỏi danh sách bạn bè?
+                        </Text>
+                        <View style={styles.confirmationButtons}>
+                            <TouchableOpacity 
+                                style={styles.cancelButton}
+                                onPress={() => setShowDeleteConfirmation(false)}
+                            >
+                                <Text style={styles.cancelButtonText}>Hủy</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={styles.deleteButton}
+                                onPress={() => handleRemoveFriend(userInfo.userID)}
+                            >
+                                <Text style={styles.deleteButtonText}>Xóa</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -598,6 +643,79 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     acceptButtonText: {
+        color: 'white',
+        fontWeight: '500',
+    },
+    menuPopup: {
+        position: 'absolute',
+        top: 50,
+        right: 15,
+        backgroundColor: 'white',
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+        zIndex: 1000,
+    },
+    menuItem: {
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+    },
+    deleteText: {
+        color: 'red',
+        fontSize: 16,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    confirmationModal: {
+        backgroundColor: 'white',
+        borderRadius: 12,
+        padding: 20,
+        width: '80%',
+        alignItems: 'center',
+    },
+    confirmationTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    confirmationMessage: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginBottom: 20,
+        color: '#333',
+    },
+    confirmationButtons: {
+        flexDirection: 'row',
+        width: '100%',
+        justifyContent: 'space-between',
+    },
+    cancelButton: {
+        flex: 1,
+        backgroundColor: '#f0f0f0',
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginRight: 10,
+    },
+    cancelButtonText: {
+        color: '#333',
+        fontWeight: '500',
+    },
+    deleteButton: {
+        flex: 1,
+        backgroundColor: '#ff3b30',
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    deleteButtonText: {
         color: 'white',
         fontWeight: '500',
     },
