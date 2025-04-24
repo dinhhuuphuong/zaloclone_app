@@ -20,4 +20,5 @@ export type RootStackParamList = {
     NewGroup: undefined;
     SplashScreen: undefined;
     Options: undefined;
+    AddFriendToGroup: undefined;
 };

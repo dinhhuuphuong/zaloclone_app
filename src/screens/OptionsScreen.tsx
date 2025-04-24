@@ -91,6 +91,10 @@ export default function OptionsScreen() {
         setPopoverVisible(false);
     };
 
+    const handleToAddMembers = () => {
+        navigation.navigate('AddFriendToGroup');
+    };
+
     useEffect(() => {
         if (!chat) navigation.navigate('Home');
     }, [chat]);
@@ -111,7 +115,10 @@ export default function OptionsScreen() {
             <ScrollView style={styles.content}>
                 {(myRole === 'admin' && (
                     <>
-                        <TouchableOpacity style={styles.optionItem}>
+                        <TouchableOpacity
+                            style={styles.optionItem}
+                            onPress={handleToAddMembers}
+                        >
                             <View style={styles.optionIconContainer}>
                                 <MaterialIcons
                                     name='person-add-alt-1'
@@ -200,20 +207,21 @@ export default function OptionsScreen() {
                                     </Text>
                                 </View>
                             </View>
-                            {myRole === 'admin' && (
-                                <TouchableOpacity
-                                    style={styles.p10}
-                                    onPress={(event) =>
-                                        handleMemberOptions(member, event)
-                                    }
-                                >
-                                    <Feather
-                                        name='more-vertical'
-                                        size={20}
-                                        color='#666'
-                                    />
-                                </TouchableOpacity>
-                            )}
+                            {myRole === 'admin' &&
+                                member.userID !== user?.userID && (
+                                    <TouchableOpacity
+                                        style={styles.p10}
+                                        onPress={(event) =>
+                                            handleMemberOptions(member, event)
+                                        }
+                                    >
+                                        <Feather
+                                            name='more-vertical'
+                                            size={20}
+                                            color='#666'
+                                        />
+                                    </TouchableOpacity>
+                                )}
                         </View>
                     ))}
                 </View>

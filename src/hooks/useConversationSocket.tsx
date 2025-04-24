@@ -16,7 +16,6 @@ const useConversationSocket = () => {
     const fetchConversationList = async (): Promise<void> => {
         try {
             const results = await getConversations();
-            console.log('results', results);
 
             const conversationsClone = [...results];
             const conversationsValue = [...results];
@@ -80,8 +79,6 @@ const useConversationSocket = () => {
         if (!socket || !userID) return;
 
         const handleGetConversationList = (): void => {
-            console.log('notification');
-
             fetchConversationList();
         };
         fetchConversationList();

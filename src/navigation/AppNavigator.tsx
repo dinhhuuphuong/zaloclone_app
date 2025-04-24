@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
 import AddFriendScreen from '../screens/AddFriendScreen';
 import AddFriendsScreen from '../screens/AddFriendsScreen';
+import AddFriendToGroupScreen from '../screens/AddFriendToGroupScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ForgotPassword from '../screens/ForgotPassword';
 import FriendRequestsScreen from '../screens/FriendRequestsScreen';
@@ -54,6 +55,10 @@ const AppNavigator = () => {
                 <Stack.Screen name='ShareMessage' component={ShareMessage} />
                 <Stack.Screen name='NewGroup' component={NewGroupScreen} />
                 <Stack.Screen name='Options' component={OptionsScreen} />
+                <Stack.Screen
+                    name='AddFriendToGroup'
+                    component={AddFriendToGroupScreen}
+                />
                 <Stack.Screen name='SplashScreen' component={SplashScreen} />
             </Stack.Navigator>
         </NavigationContainer>
