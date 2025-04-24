@@ -24,6 +24,7 @@ import { haveTheyChatted } from '../services/conversationService';
 import useChatStore from '../stores/chatStore';
 import useFriendRequestsStore from '../stores/friendRequestsStore';
 import useFriendsStore from '../stores/friendsStore';
+import useGroupStore from '../stores/groupStore';
 import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
 import { showError } from '../utils';
 
@@ -46,6 +47,7 @@ export default function OtherUserProfile() {
     const { friendRequests, setFriendRequests } = useFriendRequestsStore();
     const { friends, setFriends } = useFriendsStore();
     const { setChat } = useChatStore();
+    const { reset } = useGroupStore();
     const { sentRequests, setSentRequests } = useSentFriendRequestsStore();
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<RouteProps>();
@@ -82,12 +84,14 @@ export default function OtherUserProfile() {
                     ? response.convDetails.conversationID
                     : userInfo.userID,
             });
+            reset();
             navigation.navigate('Chat');
         } catch (error) {
             setChat({
                 ...userInfo,
                 conversationID: userInfo.userID,
             });
+            reset();
             navigation.navigate('Chat');
         }
     };

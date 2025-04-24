@@ -2,42 +2,18 @@ import { useEffect } from 'react';
 import { useSocket } from '../contexts/SocketContext';
 import { getGroupInfo, getMembersOfGroup } from '../services/groupService';
 import useChatStore from '../stores/chatStore';
+import useGroupStore from '../stores/groupStore';
 import useUserStore from '../stores/userStore';
-
-interface Conversation {
-    conversationID: string;
-    // Thêm các thuộc tính khác nếu cần
-}
-
-interface ConversationWrapper {
-    conversation: Conversation;
-}
-
-interface TypeContent {
-    contentName: string | null;
-    conversation: ConversationWrapper | null;
-}
-
-interface Member {
-    // Định nghĩa kiểu dữ liệu cho thành viên nhóm
-    // Ví dụ:
-    userID: string;
-    username: string;
-    // Thêm các thuộc tính khác nếu cần
-}
+import { toGroupMembers } from '../utils';
 
 interface KickData {
     conversationID: string;
     // Thêm các thuộc tính khác nếu cần
 }
 
-interface GroupInfo {
-    groupName: string;
-    // Thêm các thuộc tính khác nếu cần
-}
-
 const useMemberOfGroupSocket = (): void => {
     const { chat } = useChatStore();
+    const { setMembers } = useGroupStore();
     const socket = useSocket();
     const { user } = useUserStore();
     const userID = user?.userID;
@@ -50,11 +26,10 @@ const useMemberOfGroupSocket = (): void => {
             if (!conversationID) return;
             try {
                 const members = await getMembersOfGroup(conversationID);
-                console.log('members', members);
-                // setMembers(members.data);
+
+                setMembers(conversationID, toGroupMembers(members));
             } catch (err) {
-                console.error('Lỗi khi lấy members nhóm:', err);
-                // setMembers([]);
+                setMembers(conversationID, []);
             }
         };
 
@@ -90,7 +65,7 @@ const useMemberOfGroupSocket = (): void => {
             socket.off('grantAdmin', handleChangeMemberOfGroup);
             socket.off('leaveMember', handleChangeMemberOfGroup);
         };
-    }, [socket, userID]);
+    }, [socket, userID, chat?.conversationID]);
 };
 
 export default useMemberOfGroupSocket;

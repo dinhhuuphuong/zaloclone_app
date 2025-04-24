@@ -15,6 +15,7 @@ import { haveTheyChatted } from '../../services/conversationService';
 import useChatStore from '../../stores/chatStore';
 import useFriendRequestsStore from '../../stores/friendRequestsStore';
 import useFriendsStore from '../../stores/friendsStore';
+import useGroupStore from '../../stores/groupStore';
 import useSentFriendRequestsStore from '../../stores/sentFriendRequestsStore';
 import { IFriendRequest } from '../../types/friend';
 
@@ -38,6 +39,7 @@ const FriendTab = () => {
     const { friendRequests } = useFriendRequestsStore();
     const { sentRequests } = useSentFriendRequestsStore();
     const { setChat } = useChatStore();
+    const { reset } = useGroupStore();
 
     const handleToChatScreen = async (user: IFriendRequest) => {
         try {
@@ -49,12 +51,14 @@ const FriendTab = () => {
                     ? response.convDetails.conversationID
                     : user.userID,
             });
+            reset();
             navigation.navigate('Chat');
         } catch (error) {
             setChat({
                 ...user,
                 conversationID: user.userID,
             });
+            reset();
             navigation.navigate('Chat');
         }
     };

@@ -23,6 +23,7 @@ import { createGroup, getGroupInfo } from '../services/groupService';
 import useChatStore from '../stores/chatStore';
 import useConversationsStore from '../stores/conversationsStore';
 import useFriendsStore from '../stores/friendsStore';
+import useGroupStore from '../stores/groupStore';
 import { IFriendRequest } from '../types/friend';
 import { SearchUserByPhoneNumber } from '../types/user';
 import { showError, toSearchUser } from '../utils';
@@ -39,6 +40,7 @@ export default function NewGroupScreen() {
     const [avatar, setAvatar] = useState<any>();
     const { setConversations } = useConversationsStore();
     const { setChat } = useChatStore();
+    const { reset } = useGroupStore();
 
     const searchDebounce = useDebounce(searchQuery);
 
@@ -202,7 +204,7 @@ export default function NewGroupScreen() {
             const conversation = conversations.find(
                 (conversation) =>
                     conversation.conversation.conversationID ===
-                    newGroup.data.conversationID,
+                    newGroup.data.groupID,
             );
 
             setConversations(conversations);
@@ -216,6 +218,7 @@ export default function NewGroupScreen() {
                     userID: receiver?.userID || '',
                     conversationID: conversation.conversation.conversationID,
                 });
+                reset();
 
                 navigation.navigate('Chat');
             }

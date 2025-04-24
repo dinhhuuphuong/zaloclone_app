@@ -29,6 +29,7 @@ import useChatStore from '../stores/chatStore';
 import useConversationsStore from '../stores/conversationsStore';
 import useFriendRequestsStore from '../stores/friendRequestsStore';
 import useFriendsStore from '../stores/friendsStore';
+import useGroupStore from '../stores/groupStore';
 import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
 import { parseTimestamp } from '../utils';
 
@@ -48,11 +49,12 @@ const menuItems = [
 export default function HomeScreen() {
     const navigation = useNavigation<NavigationProp>();
     const { setChat } = useChatStore();
+    const { reset } = useGroupStore();
     const [isMenuVisible, setIsMenuVisible] = useState(false);
     const { setFriends } = useFriendsStore();
     const { setFriendRequests } = useFriendRequestsStore();
     const { setSentRequests } = useSentFriendRequestsStore();
-    const { conversations, setConversations } = useConversationsStore();
+    const { conversations } = useConversationsStore();
 
     const handleMenuItemPress = (itemId: string) => {
         setIsMenuVisible(false);
@@ -216,6 +218,9 @@ export default function HomeScreen() {
                                     conversationID:
                                         item.conversation.conversationID,
                                 });
+
+                                reset();
+
                                 navigation.navigate('Chat');
                             }}
                         >

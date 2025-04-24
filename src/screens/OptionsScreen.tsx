@@ -1,9 +1,10 @@
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
     Image,
+    Modal,
     ScrollView,
     StyleSheet,
     Text,
@@ -12,9 +13,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
+import { grantAdmin } from '../services/groupService';
 import useChatStore from '../stores/chatStore';
 import useGroupStore, { User } from '../stores/groupStore';
 import useUserStore from '../stores/userStore';
+import { showError } from '../utils';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'Options'>;
 
@@ -23,6 +26,9 @@ export default function OptionsScreen() {
     const { group } = useGroupStore();
     const navigation = useNavigation<NavigationProp>();
     const { user } = useUserStore();
+    const [popoverVisible, setPopoverVisible] = useState(false);
+    const [selectedMember, setSelectedMember] = useState<User | null>(null);
+    const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
     const myRole = useMemo(() => {
         if (!chat?.conversationID) return null;
 
@@ -41,6 +47,42 @@ export default function OptionsScreen() {
 
     const handleBack = () => {
         navigation.goBack();
+    };
+
+    const handleMemberOptions = useCallback(
+        (member: User, event: any) => {
+            // Chỉ admin mới có quyền quản lý thành viên
+            if (myRole !== 'admin') return;
+
+            // Lấy vị trí của nút để hiển thị popover
+            const { pageX, pageY } = event.nativeEvent;
+            setPopoverPosition({ x: pageX - 150, y: pageY - 20 });
+            setSelectedMember(member);
+            setPopoverVisible(true);
+        },
+        [myRole],
+    );
+
+    const handleSetAdmin = async () => {
+        try {
+            if (!selectedMember || chat?.conversationID === undefined) return;
+
+            await grantAdmin(selectedMember?.userID, chat.conversationID);
+
+            setPopoverVisible(false);
+        } catch (error) {
+            showError(error, 'Đã có lỗi xảy ra');
+        }
+    };
+
+    const handleKickMember = () => {
+        // Xử lý logic kích thành viên
+        console.log('Kích thành viên:', selectedMember?.fullName);
+        setPopoverVisible(false);
+    };
+
+    const closePopover = () => {
+        setPopoverVisible(false);
     };
 
     return (
@@ -110,49 +152,128 @@ export default function OptionsScreen() {
                 <View style={styles.membersSection}>
                     <View style={styles.membersSectionHeader}>
                         <Text style={styles.membersSectionTitle}>
-                            Danh sách thành viên (5)
+                            Danh sách thành viên ({members?.length ?? 0})
                         </Text>
-                        <TouchableOpacity>
-                            <Feather
-                                name='more-vertical'
-                                size={20}
-                                color='#666'
-                            />
-                        </TouchableOpacity>
                     </View>
 
                     {/* Members List */}
                     {members.map((member) => (
-                        <View key={member.userID} style={styles.memberItem}>
-                            <View style={styles.memberAvatarContainer}>
-                                <Image
-                                    source={{ uri: member.avatar }}
-                                    style={styles.memberAvatar}
-                                />
-                                {member.role === 'admin' && (
-                                    <View style={styles.crownBadge}>
-                                        <MaterialIcons
-                                            name='stars'
-                                            size={12}
-                                            color='#FFD700'
-                                        />
-                                    </View>
-                                )}
+                        <View
+                            key={member.userID}
+                            style={styles.memberContainer}
+                        >
+                            <View style={styles.memberItem}>
+                                <View style={styles.memberAvatarContainer}>
+                                    <Image
+                                        source={
+                                            member.avatar
+                                                ? { uri: member.avatar }
+                                                : require('../assets/images/225-default-avatar.png')
+                                        }
+                                        style={styles.memberAvatar}
+                                    />
+                                    {member.role === 'admin' && (
+                                        <View style={styles.crownBadge}>
+                                            <MaterialIcons
+                                                name='stars'
+                                                size={12}
+                                                color='#FFD700'
+                                            />
+                                        </View>
+                                    )}
+                                </View>
+                                <View style={styles.memberInfo}>
+                                    <Text style={styles.memberName}>
+                                        {member.userID === user?.userID
+                                            ? 'Bạn'
+                                            : member.fullName}
+                                    </Text>
+                                </View>
                             </View>
-                            <View style={styles.memberInfo}>
-                                <Text style={styles.memberName}>
-                                    {member.fullName}
-                                </Text>
-                            </View>
+                            {myRole === 'admin' && (
+                                <TouchableOpacity
+                                    style={styles.p10}
+                                    onPress={(event) =>
+                                        handleMemberOptions(member, event)
+                                    }
+                                >
+                                    <Feather
+                                        name='more-vertical'
+                                        size={20}
+                                        color='#666'
+                                    />
+                                </TouchableOpacity>
+                            )}
                         </View>
                     ))}
                 </View>
             </ScrollView>
+
+            <Modal
+                transparent={true}
+                visible={popoverVisible}
+                animationType='fade'
+                onRequestClose={closePopover}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={closePopover}
+                >
+                    <View
+                        style={[
+                            styles.popoverContainer,
+                            {
+                                left: popoverPosition.x,
+                                top: popoverPosition.y,
+                            },
+                        ]}
+                    >
+                        <TouchableOpacity
+                            style={styles.popoverItem}
+                            onPress={handleSetAdmin}
+                        >
+                            <MaterialIcons
+                                name='stars'
+                                size={20}
+                                color='#0084ff'
+                            />
+                            <Text style={styles.popoverText}>
+                                Đặt trưởng nhóm
+                            </Text>
+                        </TouchableOpacity>
+
+                        <View style={styles.popoverDivider} />
+
+                        <TouchableOpacity
+                            style={styles.popoverItem}
+                            onPress={handleKickMember}
+                        >
+                            <MaterialIcons
+                                name='person-remove'
+                                size={20}
+                                color='#ff3b30'
+                            />
+                            <Text
+                                style={[
+                                    styles.popoverText,
+                                    { color: '#ff3b30' },
+                                ]}
+                            >
+                                Kích thành viên
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
+    p10: {
+        padding: 10,
+    },
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
@@ -209,6 +330,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#ff3b30',
     },
+    memberContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     membersSection: {
         backgroundColor: 'white',
     },
@@ -227,6 +352,7 @@ const styles = StyleSheet.create({
         color: '#0084ff',
     },
     memberItem: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 10,
@@ -269,5 +395,33 @@ const styles = StyleSheet.create({
     },
     addButton: {
         padding: 10,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.2)',
+    },
+    popoverContainer: {
+        position: 'absolute',
+        width: 180,
+        backgroundColor: 'white',
+        borderRadius: 8,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    popoverItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+    },
+    popoverText: {
+        marginLeft: 10,
+        fontSize: 14,
+    },
+    popoverDivider: {
+        height: 1,
+        backgroundColor: '#e0e0e0',
     },
 });

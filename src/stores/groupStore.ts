@@ -13,6 +13,7 @@ interface GroupStore {
         [key: string]: Array<User>;
     };
     setMembers: (conversationId: string, users: User[]) => void;
+    reset: () => void;
 }
 
 const useGroupStore = create<GroupStore>((set) => ({
@@ -24,6 +25,7 @@ const useGroupStore = create<GroupStore>((set) => ({
                 [conversationId]: users,
             },
         })),
+    reset: () => set({ group: {} }),
 }));
 
 export default useGroupStore;
