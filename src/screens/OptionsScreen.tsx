@@ -13,8 +13,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
-import { deleteGroup, grantAdmin, kickMember } from '../services/groupService';
+import {
+    deleteGroup,
+    grantAdmin,
+    kickMember,
+    leaveGroup,
+} from '../services/groupService';
 import useChatStore from '../stores/chatStore';
+import useConversationsStore from '../stores/conversationsStore';
 import useGroupStore, { User } from '../stores/groupStore';
 import useUserStore from '../stores/userStore';
 import { showError } from '../utils';
@@ -22,6 +28,7 @@ import { showError } from '../utils';
 type NavigationProp = StackNavigationProp<RootStackParamList, 'Options'>;
 
 export default function OptionsScreen() {
+    const { deleteConversation } = useConversationsStore();
     const { chat } = useChatStore();
     const { group } = useGroupStore();
     const navigation = useNavigation<NavigationProp>();
@@ -109,6 +116,21 @@ export default function OptionsScreen() {
         }
     };
 
+    const handleLeaveGroup = async () => {
+        try {
+            if (!chat?.conversationID) return;
+
+            const groupID = chat.conversationID;
+
+            await leaveGroup(groupID);
+
+            deleteConversation(groupID);
+            navigation.navigate('Home');
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     useEffect(() => {
         if (!chat) navigation.navigate('Home');
     }, [chat]);
@@ -167,7 +189,10 @@ export default function OptionsScreen() {
                         </TouchableOpacity>
                     </>
                 )) || (
-                    <TouchableOpacity style={styles.optionItem}>
+                    <TouchableOpacity
+                        style={styles.optionItem}
+                        onPress={handleLeaveGroup}
+                    >
                         <View style={styles.optionIconContainer}>
                             <MaterialIcons
                                 name='logout'
