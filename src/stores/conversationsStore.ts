@@ -38,6 +38,7 @@ interface ConversationsStore {
         receiver: SearchUserByPhoneNumber,
     ) => void;
     addConversation: (conversation: IConversation) => void;
+    deleteConversation: (conversationID: string) => void;
 }
 
 const useConversationsStore = create<ConversationsStore>((set) => ({
@@ -55,6 +56,13 @@ const useConversationsStore = create<ConversationsStore>((set) => ({
     addConversation: (conversation: IConversation) =>
         set((state) => ({
             conversations: [conversation, ...(state.conversations ?? [])],
+        })),
+    deleteConversation: (conversationID: string) =>
+        set((state) => ({
+            conversations: state.conversations?.filter(
+                (conversation) =>
+                    conversation.conversation.conversationID !== conversationID,
+            ),
         })),
 }));
 

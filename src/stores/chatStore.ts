@@ -11,6 +11,7 @@ interface ChatStore {
     chat: Chat | null;
     setChat: (chat: Chat) => void;
     setConversationID: (conversationID: string) => void;
+    clearChat: () => void;
 }
 
 const useChatStore = create<ChatStore>((set) => ({
@@ -26,6 +27,7 @@ const useChatStore = create<ChatStore>((set) => ({
                   } as Chat)
                 : null,
         })),
+    clearChat: () => set({ chat: null }),
 }));
 
 export default useChatStore;

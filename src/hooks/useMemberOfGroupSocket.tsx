@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
+import { Alert } from 'react-native';
 import { useSocket } from '../contexts/SocketContext';
 import { getGroupInfo, getMembersOfGroup } from '../services/groupService';
 import useChatStore from '../stores/chatStore';
+import useConversationsStore from '../stores/conversationsStore';
 import useGroupStore from '../stores/groupStore';
 import useUserStore from '../stores/userStore';
 import { toGroupMembers } from '../utils';
@@ -12,8 +14,9 @@ interface KickData {
 }
 
 const useMemberOfGroupSocket = (): void => {
-    const { chat } = useChatStore();
+    const { chat, clearChat } = useChatStore();
     const { setMembers } = useGroupStore();
+    const { deleteConversation } = useConversationsStore();
     const socket = useSocket();
     const { user } = useUserStore();
     const userID = user?.userID;
@@ -44,7 +47,12 @@ const useMemberOfGroupSocket = (): void => {
                 try {
                     const groupInfo = await getGroupInfo(conversationID);
                     console.log('groupInfo', groupInfo);
-                    //   toast.error(`Bạn đã bị mời khỏi nhóm: ${groupInfo.data.groupName}`);
+
+                    Alert.alert(
+                        `Bạn đã bị mời khỏi nhóm: ${groupInfo.groupName}`,
+                    );
+                    deleteConversation(conversationID);
+                    clearChat();
                 } catch (err) {
                     console.error('Lỗi khi lấy thông tin nhóm:', err);
                 }
@@ -65,7 +73,7 @@ const useMemberOfGroupSocket = (): void => {
             socket.off('grantAdmin', handleChangeMemberOfGroup);
             socket.off('leaveMember', handleChangeMemberOfGroup);
         };
-    }, [socket, userID, chat?.conversationID]);
+    }, [socket, userID, chat?.conversationID, clearChat, deleteConversation]);
 };
 
 export default useMemberOfGroupSocket;

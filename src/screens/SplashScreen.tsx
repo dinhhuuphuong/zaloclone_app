@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Animated, Easing, Image, StyleSheet, Text } from 'react-native';
 import { RootStackParamList } from '../navigation/types';
 import { getCurrentUser } from '../services/authService';
@@ -12,7 +12,6 @@ type NavigationProp = StackNavigationProp<RootStackParamList, 'SplashScreen'>;
 
 export default function SplashScreen() {
     const navigation = useNavigation<NavigationProp>();
-    const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(false);
     const { setUser } = useUserStore();
 
     const logoOpacity = new Animated.Value(0);
@@ -26,7 +25,7 @@ export default function SplashScreen() {
                 const userToken = await AsyncStorage.getItem('accessToken');
 
                 if (!userToken) {
-                    setIsLoggedIn(false);
+                    navigation.navigate('Login');
                     return;
                 }
 
@@ -35,11 +34,9 @@ export default function SplashScreen() {
                 if (!user) throw new Error('User not found');
 
                 setUser(user);
-                setIsLoggedIn(!!userToken);
                 navigation.navigate('Home');
             } catch (error) {
                 console.error('Lỗi khi kiểm tra đăng nhập:', error);
-                setIsLoggedIn(false);
                 navigation.navigate('Login');
             }
         };

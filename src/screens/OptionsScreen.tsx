@@ -1,7 +1,7 @@
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Image,
     Modal,
@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
-import { grantAdmin } from '../services/groupService';
+import { grantAdmin, kickMember } from '../services/groupService';
 import useChatStore from '../stores/chatStore';
 import useGroupStore, { User } from '../stores/groupStore';
 import useUserStore from '../stores/userStore';
@@ -75,15 +75,25 @@ export default function OptionsScreen() {
         }
     };
 
-    const handleKickMember = () => {
-        // Xử lý logic kích thành viên
-        console.log('Kích thành viên:', selectedMember?.fullName);
-        setPopoverVisible(false);
+    const handleKickMember = async () => {
+        try {
+            if (!selectedMember || chat?.conversationID === undefined) return;
+
+            await kickMember(chat?.conversationID, selectedMember.userID);
+
+            setPopoverVisible(false);
+        } catch (error) {
+            showError(error, 'Đã có lỗi xảy ra');
+        }
     };
 
     const closePopover = () => {
         setPopoverVisible(false);
     };
+
+    useEffect(() => {
+        if (!chat) navigation.navigate('Home');
+    }, [chat]);
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>

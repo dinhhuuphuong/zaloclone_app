@@ -309,6 +309,10 @@ export default function ChatScreen() {
         }
     }, [conversation?.conversation?.conversationID]);
 
+    useEffect(() => {
+        if (!chat) navigation.navigate('Home');
+    }, [chat]);
+
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <StatusBar backgroundColor='#0084ff' />
