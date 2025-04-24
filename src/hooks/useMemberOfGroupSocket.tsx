@@ -60,11 +60,17 @@ const useMemberOfGroupSocket = (): void => {
             fetchInfoGroup();
         };
 
+        const handleGroupDeleted = (conversationID: string): void => {
+            deleteConversation(conversationID);
+            clearChat();
+        };
+
         socket.on('kickedFromGroup', handleKickedFromGroup);
         socket.on('memberKicked', handleChangeMemberOfGroup);
         socket.on('newMember', handleChangeMemberOfGroup);
         socket.on('grantAdmin', handleChangeMemberOfGroup);
         socket.on('leaveMember', handleChangeMemberOfGroup);
+        socket.on('groupDeleted', handleGroupDeleted);
 
         return () => {
             socket.off('kickedFromGroup', handleKickedFromGroup);
@@ -72,6 +78,7 @@ const useMemberOfGroupSocket = (): void => {
             socket.off('newMember', handleChangeMemberOfGroup);
             socket.off('grantAdmin', handleChangeMemberOfGroup);
             socket.off('leaveMember', handleChangeMemberOfGroup);
+            socket.off('groupDeleted', handleGroupDeleted);
         };
     }, [socket, userID, chat?.conversationID, clearChat, deleteConversation]);
 };

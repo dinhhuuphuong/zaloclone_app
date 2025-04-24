@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
-import { grantAdmin, kickMember } from '../services/groupService';
+import { deleteGroup, grantAdmin, kickMember } from '../services/groupService';
 import useChatStore from '../stores/chatStore';
 import useGroupStore, { User } from '../stores/groupStore';
 import useUserStore from '../stores/userStore';
@@ -95,6 +95,20 @@ export default function OptionsScreen() {
         navigation.navigate('AddFriendToGroup');
     };
 
+    const handleDeleteGroup = async () => {
+        try {
+            if (!chat?.conversationID) return;
+
+            const groupID = chat.conversationID;
+
+            await deleteGroup(groupID);
+
+            navigation.navigate('Home');
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     useEffect(() => {
         if (!chat) navigation.navigate('Home');
     }, [chat]);
@@ -134,7 +148,10 @@ export default function OptionsScreen() {
                         </TouchableOpacity>
 
                         {/* Leave Group */}
-                        <TouchableOpacity style={styles.optionItem}>
+                        <TouchableOpacity
+                            style={styles.optionItem}
+                            onPress={handleDeleteGroup}
+                        >
                             <View style={styles.optionIconContainer}>
                                 <MaterialIcons
                                     name='logout'
