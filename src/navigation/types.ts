@@ -19,4 +19,5 @@ export type RootStackParamList = {
     ShareMessage: IMessage;
     NewGroup: undefined;
     SplashScreen: undefined;
+    Options: undefined;
 };

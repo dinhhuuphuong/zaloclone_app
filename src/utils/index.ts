@@ -50,10 +50,17 @@ export const toSearchUser = (
 export const toGroupMembers = (
     users: {
         groupID: string;
+        role: 'member' | 'admin';
         userInfo: User;
     }[],
 ): Array<User> => {
     if (users.length === 0) return [];
 
-    return users.map((item) => item.userInfo);
+    return users.map((item) => ({
+        userID: item.userInfo.userID,
+        phoneNumber: item.userInfo.phoneNumber,
+        fullName: item.userInfo.fullName,
+        avatar: item.userInfo.avatar,
+        role: item.role,
+    }));
 };

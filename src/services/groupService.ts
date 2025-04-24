@@ -4,7 +4,12 @@ import { User } from '../stores/groupStore';
 
 // Định nghĩa các interface
 export interface GroupResponse {
-    conversationID: string;
+    groupName: string;
+    createdAt: number;
+    destroy: boolean;
+    groupAvatar: string;
+    updatedAt: number;
+    groupID: string;
 }
 
 interface MessageResponse {
@@ -52,12 +57,14 @@ export const getMembersOfGroup = async (
 ): Promise<
     {
         groupID: string;
+        role: 'member' | 'admin';
         userInfo: User;
     }[]
 > => {
     const response = await axiosInstance.get<
         {
             groupID: string;
+            role: 'member' | 'admin';
             userInfo: User;
         }[]
     >(`/groups/members/${groupID}`);

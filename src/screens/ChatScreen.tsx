@@ -7,6 +7,7 @@ import {
     SimpleLineIcons,
 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
@@ -36,6 +37,7 @@ import EmojiSelector from 'react-native-emoji-selector';
 import OutsidePressHandler from 'react-native-outside-press';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Message from '../components/Message';
+import { RootStackParamList } from '../navigation/types';
 import { getMembersOfGroup } from '../services/groupService';
 import {
     getMessagesByConversation,
@@ -49,13 +51,15 @@ import useMessagesStore from '../stores/messagesStore';
 import useUserOnlineStore from '../stores/userOnlineStore';
 import { toGroupMembers } from '../utils';
 
+type NavigationProp = StackNavigationProp<RootStackParamList, 'Options'>;
+
 export default function ChatScreen() {
     const [message, setMessage] = useState('');
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [files, setFiles] = useState<File[]>([]);
     const [showImagePreview, setShowImagePreview] = useState(false);
     const [selection, setSelection] = useState({ start: 0, end: 0 });
-    const navigation = useNavigation();
+    const navigation = useNavigation<NavigationProp>();
     const { chat, setConversationID } = useChatStore();
     const { group, setMembers } = useGroupStore();
     const { userOnline } = useUserOnlineStore();
@@ -77,6 +81,7 @@ export default function ChatScreen() {
         );
     }, [conversationList, chat?.conversationID]);
     console.log('members', chat?.conversationID && group[chat?.conversationID]);
+    const isGroup = conversation?.conversation.conversationType === 'group';
 
     const handleMessageChange = useCallback((text: string) => {
         setMessage(text);
@@ -347,13 +352,18 @@ export default function ChatScreen() {
                             color='white'
                         />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.headerButton}>
-                        <SimpleLineIcons
-                            name='options-vertical'
-                            size={20}
-                            color='white'
-                        />
-                    </TouchableOpacity>
+                    {isGroup && (
+                        <TouchableOpacity
+                            style={styles.headerButton}
+                            onPress={() => navigation.navigate('Options')}
+                        >
+                            <SimpleLineIcons
+                                name='options-vertical'
+                                size={20}
+                                color='white'
+                            />
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
 

@@ -5,6 +5,7 @@ export interface User {
     phoneNumber: string;
     fullName: string;
     avatar: string;
+    role: 'member' | 'admin';
 }
 
 interface GroupStore {
