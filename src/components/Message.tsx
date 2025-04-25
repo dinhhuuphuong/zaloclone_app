@@ -1,29 +1,15 @@
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useEvent } from 'expo';
-import { useVideoPlayer, VideoView } from 'expo-video';
-import React, { useEffect, useState } from 'react';
-import {
-    Image,
-    Linking,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { RootStackParamList } from '../navigation/types';
 import { deleteMessage, revokeMessage } from '../services/messageService';
 import useChatStore from '../stores/chatStore';
 import { IMessage } from '../stores/messagesStore';
 import { parseTimestamp, showError } from '../utils';
+import { IMessageMedia, MessageMedia } from './MessageMedia';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'ShareMessage'>;
-
-const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-const videoTypes = ['mp4', 'webm', 'mov'];
 
 const Message = ({
     isOther,
@@ -35,33 +21,32 @@ const Message = ({
     const navigation = useNavigation<NavigationProp>();
     const { chat } = useChatStore();
     const [modalVisible, setModalVisible] = useState(false);
-    const isImage = imageTypes.includes(message.messageType?.toLowerCase());
-    const isVideo = videoTypes.includes(message.messageType?.toLowerCase());
-    const isPDF = message.messageType?.toLowerCase() === 'pdf';
-    const player = useVideoPlayer(message.messageUrl, (player) => {
-        player.loop = true;
-        player.play();
-    });
     const isRevoked = message.revoke;
     const isDeletedBySender = message.senderDelete && !isOther;
     const isShowMessage = !isRevoked && !isDeletedBySender;
+    const messageDetails: Array<IMessageMedia> = useMemo(() => {
+        if (message.messageType === 'text') return [];
 
-    const { isPlaying } = useEvent(player, 'playingChange', {
-        isPlaying: player.playing,
-    });
-
-    const handleOpenPDF = async () => {
         try {
-            const canOpen = await Linking.canOpenURL(message.messageUrl);
-            if (canOpen) {
-                await Linking.openURL(message.messageUrl);
-            } else {
-                console.error('Cannot open PDF file');
-            }
+            const urls = JSON.parse(message.messageUrl);
+            const types = JSON.parse(message.messageType);
+            const contents = JSON.parse(message.messageContent);
+
+            return urls.map((url: string, index: number) => ({
+                url: url.trim(),
+                type: types[index],
+                content: contents[index],
+            }));
         } catch (error) {
-            console.error('Error opening PDF:', error);
+            return [
+                {
+                    url: message.messageUrl,
+                    type: message.messageType,
+                    content: message.messageContent,
+                },
+            ];
         }
-    };
+    }, [message]);
 
     const handleDeleteMessage = async () => {
         try {
@@ -98,16 +83,6 @@ const Message = ({
         setModalVisible(true);
     };
 
-    useEffect(() => {
-        if (!isVideo) return;
-
-        if (isPlaying) {
-            player.play();
-        } else {
-            player.pause();
-        }
-    }, [isPlaying, isVideo]);
-
     return (
         <View
             style={[
@@ -129,45 +104,15 @@ const Message = ({
                             : 'Bạn đã xoá tin nhắn này'}
                     </Text>
                 )}
-                {isShowMessage && isImage && (
-                    <ScrollView
-                        horizontal
-                        style={styles.messageImagesContainer}
-                    >
-                        {message.messageUrl.split(',').map((url: string) => (
-                            <Image
-                                key={url}
-                                style={styles.messageImage}
-                                source={{ uri: url.trim() }}
-                            />
-                        ))}
-                    </ScrollView>
-                )}
-                {isShowMessage && isVideo && (
-                    <VideoView
-                        style={styles.video}
-                        player={player}
-                        allowsFullscreen
-                        allowsPictureInPicture
-                    />
-                )}
-                {isShowMessage && isPDF && (
-                    <TouchableOpacity onPress={handleOpenPDF}>
-                        <View style={styles.pdfContainer}>
-                            <Text style={styles.pdfText}>
-                                📄 {message.messageContent ?? 'PDF File'}
-                            </Text>
-                        </View>
-                    </TouchableOpacity>
-                )}
+
+                {isShowMessage && <MessageMedia medias={messageDetails} />}
+
                 {isShowMessage && message.messageType === 'sticker' && (
                     <Text style={styles.messageText}>Sticker</Text>
                 )}
                 {isShowMessage &&
                     message.messageContent &&
-                    !isImage &&
-                    !isVideo &&
-                    !isPDF && (
+                    messageDetails.length === 0 && (
                         <Text style={styles.messageText}>
                             {message.messageContent}
                         </Text>
@@ -230,6 +175,7 @@ export default Message;
 
 const styles = StyleSheet.create({
     messageRow: {
+        width: '100%',
         flexDirection: 'row',
         marginBottom: 10,
         alignItems: 'flex-end',

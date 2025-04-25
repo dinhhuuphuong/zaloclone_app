@@ -64,3 +64,44 @@ export const toGroupMembers = (
         role: item.role,
     }));
 };
+
+const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'svg'];
+
+export const isImage = (type: string) => {
+    return imageTypes.includes(type);
+};
+
+const videoTypes = ['mp4', 'webm', 'mov', 'avi', 'mkv', 'flv', 'wmv'];
+
+export const isVideo = (type: string) => {
+    return videoTypes.includes(type);
+};
+
+const audioTypes = ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a'];
+
+export const isAudio = (type: string) => {
+    return audioTypes.includes(type);
+};
+
+const documentTypes = [
+    'pdf',
+    'doc',
+    'docx',
+    'xls',
+    'xlsx',
+    'ppt',
+    'pptx',
+    'txt',
+    'csv',
+    'json',
+];
+
+export const isDocument = (type: string) => {
+    return documentTypes.includes(type);
+};
+
+const archiveTypes = ['zip', 'rar', '7z', 'tar', 'gz'];
+
+export const isArchive = (type: string) => {
+    return archiveTypes.includes(type);
+};
