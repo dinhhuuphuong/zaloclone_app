@@ -4,7 +4,6 @@ import { styled } from 'nativewind';
 import React, { useEffect, useState } from 'react';
 import {
     FlatList,
-    Image,
     Modal,
     Pressable,
     StyleSheet,
@@ -13,6 +12,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { ConversationItem } from '../components/ConversationItem';
 import { useChat } from '../hooks/useChat';
 import useConversationSocket from '../hooks/useConversationSocket';
 import useFriendRequestSocket from '../hooks/useFriendRequestSocket';
@@ -31,7 +31,6 @@ import useFriendRequestsStore from '../stores/friendRequestsStore';
 import useFriendsStore from '../stores/friendsStore';
 import useGroupStore from '../stores/groupStore';
 import useSentFriendRequestsStore from '../stores/sentFriendRequestsStore';
-import { parseTimestamp } from '../utils';
 
 const StyledView = styled(View);
 
@@ -208,52 +207,7 @@ export default function HomeScreen() {
                 <FlatList
                     data={conversations}
                     keyExtractor={(item) => item.conversation.conversationID}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity
-                            onPress={() => {
-                                if (!item.conversation.receiver) return;
-
-                                setChat({
-                                    ...item.conversation.receiver,
-                                    conversationID:
-                                        item.conversation.conversationID,
-                                });
-
-                                reset();
-
-                                navigation.navigate('Chat');
-                            }}
-                        >
-                            <View style={styles.messageItem}>
-                                <Image
-                                    source={
-                                        item.conversation.receiver?.avatar
-                                            ? {
-                                                  uri: item.conversation
-                                                      .receiver.avatar,
-                                              }
-                                            : require('../assets/images/225-default-avatar.png')
-                                    }
-                                    style={styles.avatar}
-                                />
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.name}>
-                                        {item.conversation.receiver?.fullName}
-                                    </Text>
-                                    <Text style={styles.message}>
-                                        {item.lastMessage?.messageContent}
-                                    </Text>
-                                </View>
-                                <Text style={styles.time}>
-                                    {item.lastMessage &&
-                                        parseTimestamp(
-                                            item.lastMessage?.updatedAt ??
-                                                item.lastMessage?.createdAt,
-                                        )}
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                    )}
+                    renderItem={(props) => <ConversationItem {...props} />}
                 />
             </View>
         </StyledView>
@@ -303,17 +257,6 @@ const styles = StyleSheet.create({
         borderColor: '#0099FF',
         color: '#000',
     },
-    messageItem: {
-        flexDirection: 'row',
-        padding: 12,
-        borderBottomWidth: 1,
-        borderColor: '#eee',
-        alignItems: 'center',
-    },
-    avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
-    name: { fontWeight: 'bold', fontSize: 15 },
-    message: { color: '#666' },
-    time: { marginLeft: 6, color: '#999', fontSize: 12 },
     bottomTab: {
         flexDirection: 'row',
         justifyContent: 'space-around',
