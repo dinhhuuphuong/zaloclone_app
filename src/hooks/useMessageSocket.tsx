@@ -28,6 +28,8 @@ const useMessageSocket = () => {
         };
 
         const fetchAndSortMessages = async (conversationID: string) => {
+            if (!conversationID) return;
+
             try {
                 const fetchedMessages = await getMessagesByConversation(
                     conversationID,
@@ -75,13 +77,19 @@ const useMessageSocket = () => {
         };
 
         socket.on('newMessage', handleNewMessage);
+        socket.on('newMessageGroup', handleNewMessage);
         socket.on('revokeMessage', handleNewMessage);
+        socket.on('revokeMessageGroup', handleNewMessage);
         socket.on('deleteMessage', handleNewMessage);
+        socket.on('deleteMessageGroup', handleNewMessage);
 
         return () => {
             socket.off('newMessage', handleNewMessage);
+            socket.off('newMessageGroup', handleNewMessage);
             socket.off('revokeMessage', handleNewMessage);
+            socket.off('revokeMessageGroup', handleNewMessage);
             socket.off('deleteMessage', handleNewMessage);
+            socket.off('deleteMessageGroup', handleNewMessage);
         };
     }, [socket, userID, setMessages, conversations, addConversation]);
 };

@@ -13,14 +13,10 @@ export interface GroupResponse {
 }
 
 interface MessageResponse {
-    _id: string;
-    sender: string;
     content: string;
-    groupID: string;
-    createdAt: string;
-    updatedAt: string;
-    isRevoked?: boolean;
-    files?: string[];
+    conversationID: string;
+    senderID: string;
+    type: string;
 }
 
 // Tạo nhóm
@@ -117,14 +113,11 @@ export const grantAdmin = (
 };
 
 // Gửi tin nhắn văn bản
-export const sendMessage = (
-    message: string,
-    groupID: string,
-): Promise<AxiosResponse<MessageResponse>> => {
-    return axiosInstance.post<MessageResponse>('/groups/messages/send', {
-        message,
-        groupID,
-    });
+export const sendMessage = (data: {
+    message: string;
+    groupID: string;
+}): Promise<AxiosResponse<MessageResponse>> => {
+    return axiosInstance.post<MessageResponse>('/groups/messages/send', data);
 };
 
 // Gửi tin nhắn file

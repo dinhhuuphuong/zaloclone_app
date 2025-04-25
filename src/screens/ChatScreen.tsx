@@ -38,7 +38,7 @@ import OutsidePressHandler from 'react-native-outside-press';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Message from '../components/Message';
 import { RootStackParamList } from '../navigation/types';
-import { getMembersOfGroup } from '../services/groupService';
+import { getMembersOfGroup, sendMessage } from '../services/groupService';
 import {
     getMessagesByConversation,
     sendFiles,
@@ -120,23 +120,37 @@ export default function ChatScreen() {
         if (!message.trim()) return;
 
         try {
-            const response = await sendTextMessage(chat?.userID ?? '', message);
-            setMessage('');
-
-            if (response.createConversation?.conversationID) {
-                setConversationID(response.createConversation.conversationID);
-                addConversation({
-                    conversation: {
-                        ...response.createConversation,
-                        receiver: {
-                            ...chat,
-                        },
-                    },
-                    lastMessage: {
-                        ...response.createNewMessage,
-                    },
+            if (conversation?.conversation.conversationType === 'group') {
+                if (chat?.conversationID === undefined) return;
+                await sendMessage({
+                    groupID: chat?.conversationID,
+                    message,
                 });
+            } else {
+                const response = await sendTextMessage(
+                    chat?.userID ?? '',
+                    message,
+                );
+
+                if (response.createConversation?.conversationID) {
+                    setConversationID(
+                        response.createConversation.conversationID,
+                    );
+                    addConversation({
+                        conversation: {
+                            ...response.createConversation,
+                            receiver: {
+                                ...chat,
+                            },
+                        },
+                        lastMessage: {
+                            ...response.createNewMessage,
+                        },
+                    });
+                }
             }
+
+            setMessage('');
         } catch (err) {
             console.error('Lỗi khi gửi tin nhắn:', err);
         }
