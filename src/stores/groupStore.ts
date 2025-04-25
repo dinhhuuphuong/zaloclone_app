@@ -5,7 +5,7 @@ export interface User {
     phoneNumber: string;
     fullName: string;
     avatar: string;
-    role: 'member' | 'admin';
+    role: 'member' | 'admin' | 'deputy';
 }
 
 interface GroupStore {

@@ -112,6 +112,26 @@ export const grantAdmin = (
     });
 };
 
+export const grantDeputy = (
+    participantId: string,
+    groupID: string,
+): Promise<AxiosResponse<{ success: boolean; message: string }>> => {
+    return axiosInstance.post('/groups/admin/deputy', {
+        participantId,
+        groupID,
+    });
+};
+
+export const revokeDeputy = (
+    participantId: string,
+    groupID: string,
+): Promise<AxiosResponse<{ success: boolean; message: string }>> => {
+    return axiosInstance.post('/groups/admin/revoke-deputy', {
+        participantId,
+        groupID,
+    });
+};
+
 // Gửi tin nhắn văn bản
 export const sendMessage = (data: {
     message: string;

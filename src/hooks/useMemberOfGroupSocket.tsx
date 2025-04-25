@@ -71,6 +71,8 @@ const useMemberOfGroupSocket = (): void => {
         socket.on('grantAdmin', handleChangeMemberOfGroup);
         socket.on('leaveMember', handleChangeMemberOfGroup);
         socket.on('groupDeleted', handleGroupDeleted);
+        socket.on('grantDeputy', handleChangeMemberOfGroup);
+        socket.on('revokeDeputy', handleChangeMemberOfGroup);
 
         return () => {
             socket.off('kickedFromGroup', handleKickedFromGroup);
@@ -78,6 +80,8 @@ const useMemberOfGroupSocket = (): void => {
             socket.off('newMember', handleChangeMemberOfGroup);
             socket.off('grantAdmin', handleChangeMemberOfGroup);
             socket.off('leaveMember', handleChangeMemberOfGroup);
+            socket.off('grantDeputy', handleChangeMemberOfGroup);
+            socket.off('revokeDeputy', handleChangeMemberOfGroup);
             socket.off('groupDeleted', handleGroupDeleted);
         };
     }, [socket, userID, chat?.conversationID, clearChat, deleteConversation]);

@@ -16,8 +16,10 @@ import { RootStackParamList } from '../navigation/types';
 import {
     deleteGroup,
     grantAdmin,
+    grantDeputy,
     kickMember,
     leaveGroup,
+    revokeDeputy,
 } from '../services/groupService';
 import useChatStore from '../stores/chatStore';
 import useConversationsStore from '../stores/conversationsStore';
@@ -58,9 +60,6 @@ export default function OptionsScreen() {
 
     const handleMemberOptions = useCallback(
         (member: User, event: any) => {
-            // Chỉ admin mới có quyền quản lý thành viên
-            if (myRole !== 'admin') return;
-
             // Lấy vị trí của nút để hiển thị popover
             const { pageX, pageY } = event.nativeEvent;
             setPopoverPosition({ x: pageX - 150, y: pageY - 20 });
@@ -75,6 +74,30 @@ export default function OptionsScreen() {
             if (!selectedMember || chat?.conversationID === undefined) return;
 
             await grantAdmin(selectedMember?.userID, chat.conversationID);
+
+            setPopoverVisible(false);
+        } catch (error) {
+            showError(error, 'Đã có lỗi xảy ra');
+        }
+    };
+
+    const handleSetDeputy = async () => {
+        try {
+            if (!selectedMember || chat?.conversationID === undefined) return;
+
+            await grantDeputy(selectedMember?.userID, chat.conversationID);
+
+            setPopoverVisible(false);
+        } catch (error) {
+            showError(error, 'Đã có lỗi xảy ra');
+        }
+    };
+
+    const handleRevokeDeputy = async () => {
+        try {
+            if (!selectedMember || chat?.conversationID === undefined) return;
+
+            await revokeDeputy(selectedMember?.userID, chat.conversationID);
 
             setPopoverVisible(false);
         } catch (error) {
@@ -240,6 +263,15 @@ export default function OptionsScreen() {
                                             />
                                         </View>
                                     )}
+                                    {member.role === 'deputy' && (
+                                        <View style={styles.crownBadge}>
+                                            <MaterialIcons
+                                                name='stars'
+                                                size={12}
+                                                color='#c8c6bd'
+                                            />
+                                        </View>
+                                    )}
                                 </View>
                                 <View style={styles.memberInfo}>
                                     <Text style={styles.memberName}>
@@ -249,7 +281,8 @@ export default function OptionsScreen() {
                                     </Text>
                                 </View>
                             </View>
-                            {myRole === 'admin' &&
+                            {['admin', 'deputy'].includes(myRole ?? 'null') &&
+                                member.role !== 'admin' &&
                                 member.userID !== user?.userID && (
                                     <TouchableOpacity
                                         style={styles.p10}
@@ -289,21 +322,57 @@ export default function OptionsScreen() {
                             },
                         ]}
                     >
-                        <TouchableOpacity
-                            style={styles.popoverItem}
-                            onPress={handleSetAdmin}
-                        >
-                            <MaterialIcons
-                                name='stars'
-                                size={20}
-                                color='#0084ff'
-                            />
-                            <Text style={styles.popoverText}>
-                                Đặt trưởng nhóm
-                            </Text>
-                        </TouchableOpacity>
+                        {myRole === 'admin' && (
+                            <>
+                                <TouchableOpacity
+                                    style={styles.popoverItem}
+                                    onPress={handleSetAdmin}
+                                >
+                                    <MaterialIcons
+                                        name='stars'
+                                        size={20}
+                                        color='#0084ff'
+                                    />
+                                    <Text style={styles.popoverText}>
+                                        Cấp quyền trưởng nhóm
+                                    </Text>
+                                </TouchableOpacity>
 
-                        <View style={styles.popoverDivider} />
+                                <View style={styles.popoverDivider} />
+
+                                {(selectedMember?.role === 'deputy' && (
+                                    <TouchableOpacity
+                                        style={styles.popoverItem}
+                                        onPress={handleRevokeDeputy}
+                                    >
+                                        <MaterialIcons
+                                            name='stars'
+                                            size={20}
+                                            color='#0084ff'
+                                        />
+                                        <Text style={styles.popoverText}>
+                                            Thu hồi quyền phó nhóm
+                                        </Text>
+                                    </TouchableOpacity>
+                                )) || (
+                                    <TouchableOpacity
+                                        style={styles.popoverItem}
+                                        onPress={handleSetDeputy}
+                                    >
+                                        <MaterialIcons
+                                            name='stars'
+                                            size={20}
+                                            color='#0084ff'
+                                        />
+                                        <Text style={styles.popoverText}>
+                                            Cấp quyền phó nhóm
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
+
+                                <View style={styles.popoverDivider} />
+                            </>
+                        )}
 
                         <TouchableOpacity
                             style={styles.popoverItem}
@@ -320,7 +389,7 @@ export default function OptionsScreen() {
                                     { color: '#ff3b30' },
                                 ]}
                             >
-                                Kích thành viên
+                                Xóa khỏi nhóm
                             </Text>
                         </TouchableOpacity>
                     </View>
