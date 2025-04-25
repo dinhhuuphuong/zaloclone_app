@@ -191,14 +191,13 @@ export const deleteMessage = (
 };
 
 // Chia sẻ tin nhắn tới nhiều nhóm
-export const shareMessage = (
-    messageID: string,
-    groupIDs: string[],
-): Promise<AxiosResponse<{ success: boolean; message: string }>> => {
-    return axiosInstance.post('/groups/messages/share', {
-        messageID,
-        groupIDs,
-    });
+export const shareMessage = (data: {
+    messageID: string;
+    groupIDs: string[];
+    receiverIds: string[];
+    conversationID: string;
+}): Promise<AxiosResponse<{ success: boolean; message: string }>> => {
+    return axiosInstance.post('/groups/messages/share', data);
 };
 
 // Lấy danh sách nhóm của người dùng

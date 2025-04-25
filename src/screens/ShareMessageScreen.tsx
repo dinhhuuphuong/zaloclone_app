@@ -165,23 +165,30 @@ export default function ShareMessage() {
         );
 
         try {
-            const queries = [];
+            // const queries = [];
 
-            if (userIds.length > 0) {
-                queries.push(
-                    shareMessage(
-                        messageData.messageID,
-                        usersSelected,
-                        messageData.conversationID,
-                    ),
-                );
-            }
+            // if (userIds.length > 0) {
+            //     queries.push(
+            //         shareMessage(
+            //             messageData.messageID,
+            //             usersSelected,
+            //             messageData.conversationID,
+            //         ),
+            //     );
+            // }
 
-            if (groupIds.length > 0) {
-                queries.push(shareMessageGroup(message.messageID, groupIds));
-            }
+            // if (groupIds.length > 0) {
+            //     queries.push(shareMessageGroup(message.messageID, groupIds));
+            // }
 
-            if (queries.length) await Promise.all(queries);
+            // if (queries.length) await Promise.all(queries);
+
+            await shareMessageGroup({
+                conversationID: messageData.conversationID,
+                groupIDs: groupIds,
+                messageID: messageData.messageID,
+                receiverIds: userIds,
+            });
 
             navigation.goBack();
             Alert.alert('Thành công', 'Chia sẻ tin nhắn thành công');
