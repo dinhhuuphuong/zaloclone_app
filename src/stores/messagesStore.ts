@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 export interface IMessage {
+    reply: string;
     messageID: string;
     conversationID: any;
     senderID: any;

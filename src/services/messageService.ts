@@ -74,3 +74,25 @@ export const shareMessage = async (
     });
     return response.data;
 };
+
+export const sendReplyMessage = async ({
+    receiverId,
+    message,
+    replyMessageID,
+    conversationID,
+}: {
+    receiverId: string;
+    message: string;
+    replyMessageID: string;
+    conversationID: string;
+}) => {
+    const response = await axiosInstance.post(
+        `/messages/send/reply/${receiverId}`,
+        {
+            message,
+            replyMessageID,
+            conversationID,
+        },
+    );
+    return response.data;
+};

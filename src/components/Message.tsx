@@ -21,9 +21,11 @@ type NavigationProp = StackNavigationProp<RootStackParamList, 'ShareMessage'>;
 const Message = ({
     isOther,
     message,
+    setReplyMessage,
 }: {
     isOther: boolean;
     message: IMessage;
+    setReplyMessage: (message: IMessage) => void;
 }) => {
     const navigation = useNavigation<NavigationProp>();
     const { chat } = useChatStore();
@@ -33,7 +35,7 @@ const Message = ({
     const isDeletedBySender = message.senderDelete && !isOther;
     const isShowMessage = !isRevoked && !isDeletedBySender;
     const messageDetails: Array<IMessageMedia> = useMemo(() => {
-        if (message.messageType === 'text') return [];
+        if (message.messageType === 'text' || message.reply) return [];
 
         try {
             const urls = JSON.parse(message.messageUrl);
@@ -121,6 +123,11 @@ const Message = ({
         setModalVisible(true);
     };
 
+    const handleReplyMessage = (message: IMessage) => {
+        setReplyMessage(message);
+        setModalVisible(false);
+    };
+
     return (
         <View
             style={[
@@ -154,6 +161,17 @@ const Message = ({
                     </Text>
                 )}
 
+                {isShowMessage && message.reply && (
+                    <View style={styles.receivedBubble}>
+                        <View style={styles.leftAccent} />
+                        <View style={styles.contentContainer}>
+                            <Text style={styles.subtitleText}>
+                                {message.reply}
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
                 {isShowMessage && <MessageMedia medias={messageDetails} />}
 
                 {isShowMessage && message.messageType === 'sticker' && (
@@ -179,6 +197,12 @@ const Message = ({
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
+                        <Pressable
+                            style={styles.modalOption}
+                            onPress={() => handleReplyMessage(message)}
+                        >
+                            <Text style={styles.modalOptionText}>Trả lời</Text>
+                        </Pressable>
                         {isOther || (
                             <>
                                 <Pressable
@@ -326,5 +350,37 @@ const styles = StyleSheet.create({
     secondaryText: {
         color: '#99a1af',
         fontStyle: 'italic',
+    },
+    receivedBubble: {
+        backgroundColor: '#e1f5fe',
+        borderRadius: 16,
+        width: '100%',
+        flexDirection: 'row',
+        overflow: 'hidden',
+    },
+    sentBubble: {
+        backgroundColor: '#dcf8c6',
+        borderRadius: 16,
+        maxWidth: '80%',
+        padding: 12,
+    },
+    leftAccent: {
+        width: 4,
+        backgroundColor: '#2196f3',
+    },
+    contentContainer: {
+        padding: 12,
+        paddingLeft: 16,
+    },
+    nameText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#000000',
+        marginBottom: 2,
+    },
+    subtitleText: {
+        fontSize: 14,
+        color: '#757575',
+        marginBottom: 8,
     },
 });

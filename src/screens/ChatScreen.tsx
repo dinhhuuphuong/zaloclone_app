@@ -37,21 +37,24 @@ import EmojiSelector from 'react-native-emoji-selector';
 import OutsidePressHandler from 'react-native-outside-press';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Message from '../components/Message';
+import { ReplyMessagePreview } from '../components/ReplyMessagePreview';
 import { RootStackParamList } from '../navigation/types';
 import {
     getMembersOfGroup,
     sendFiles as sendFilesForGroup,
     sendMessage,
+    sendReplyMessage as sendReplyMessageForGroup,
 } from '../services/groupService';
 import {
     getMessagesByConversation,
     sendFiles,
+    sendReplyMessage,
     sendTextMessage,
 } from '../services/messageService';
 import useChatStore from '../stores/chatStore';
 import useConversationsStore from '../stores/conversationsStore';
 import useGroupStore from '../stores/groupStore';
-import useMessagesStore from '../stores/messagesStore';
+import useMessagesStore, { IMessage } from '../stores/messagesStore';
 import useUserOnlineStore from '../stores/userOnlineStore';
 import useUserStore from '../stores/userStore';
 import { toGroupMembers } from '../utils';
@@ -76,6 +79,9 @@ export default function ChatScreen() {
         useConversationsStore();
     const scrollViewRef = useRef<ScrollView>(null);
     const [isOpenEmoji, setIsOpenEmoji] = useState<boolean>(false);
+    const [selectedMessage, setSelectedMessage] = useState<IMessage | null>(
+        null,
+    );
     const inputRef = useRef<TextInput>(null);
     const conversation = useMemo(() => {
         if (!conversationList) return null;
@@ -140,11 +146,37 @@ export default function ChatScreen() {
         try {
             if (conversation?.conversation.conversationType === 'group') {
                 if (chat?.conversationID === undefined) return;
+
+                if (selectedMessage) {
+                    await sendReplyMessageForGroup({
+                        groupID: chat?.conversationID ?? '',
+                        message,
+                        replyMessageID: selectedMessage.messageID,
+                    });
+
+                    setSelectedMessage(null);
+                    setMessage('');
+                    return;
+                }
+
                 await sendMessage({
                     groupID: chat?.conversationID,
                     message,
                 });
             } else {
+                if (selectedMessage) {
+                    await sendReplyMessage({
+                        conversationID: chat?.conversationID ?? '',
+                        message,
+                        replyMessageID: selectedMessage.messageID,
+                        receiverId: chat?.userID ?? '',
+                    });
+
+                    setSelectedMessage(null);
+                    setMessage('');
+                    return;
+                }
+
                 const response = await sendTextMessage(
                     chat?.userID ?? '',
                     message,
@@ -172,7 +204,7 @@ export default function ChatScreen() {
         } catch (err) {
             console.error('Lỗi khi gửi tin nhắn:', err);
         }
-    }, [message, chat]);
+    }, [message, chat, selectedMessage]);
 
     const pickImage = useCallback(async () => {
         const { status } =
@@ -481,9 +513,17 @@ export default function ChatScreen() {
                         isOther={msg.senderID !== user?.userID}
                         key={msg.messageID}
                         message={msg}
+                        setReplyMessage={setSelectedMessage}
                     />
                 ))}
             </ScrollView>
+
+            {selectedMessage && (
+                <ReplyMessagePreview
+                    message={selectedMessage}
+                    onClose={() => setSelectedMessage(null)}
+                />
+            )}
 
             {/* Input Area */}
             <KeyboardAvoidingView

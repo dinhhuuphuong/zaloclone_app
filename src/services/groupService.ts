@@ -204,3 +204,12 @@ export const getMyGroups = (): Promise<AxiosResponse<GroupResponse[]>> => {
 export const getAllGroups = (): Promise<AxiosResponse<GroupResponse[]>> => {
     return axiosInstance.get<GroupResponse[]>('/groups/all-groups');
 };
+
+export const sendReplyMessage = async (data: {
+    message: string;
+    replyMessageID: string;
+    groupID: string;
+}) => {
+    const response = await axiosInstance.post(`/groups/messages/reply`, data);
+    return response.data;
+};
