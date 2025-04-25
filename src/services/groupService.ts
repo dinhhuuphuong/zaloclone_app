@@ -24,7 +24,11 @@ export const createGroup = async (
     groupName: string,
     members: string[],
     avatarGroup?: File,
-): Promise<AxiosResponse<GroupResponse>> => {
+): Promise<
+    AxiosResponse<{
+        conversationID: string;
+    }>
+> => {
     const formData = new FormData();
     formData.append('groupName', groupName);
     if (avatarGroup) {
@@ -34,7 +38,9 @@ export const createGroup = async (
         formData.append('members', member);
     });
 
-    return axiosInstance.post<GroupResponse>('/groups/create', formData, {
+    return axiosInstance.post<{
+        conversationID: string;
+    }>('/groups/create', formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },

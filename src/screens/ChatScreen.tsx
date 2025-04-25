@@ -33,9 +33,8 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import EmojiSelector from 'react-native-emoji-selector';
-import OutsidePressHandler from 'react-native-outside-press';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import EmojiPicker, { type EmojiType } from 'rn-emoji-keyboard';
 import Message from '../components/Message';
 import { ReplyMessagePreview } from '../components/ReplyMessagePreview';
 import { RootStackParamList } from '../navigation/types';
@@ -325,13 +324,13 @@ export default function ChatScreen() {
     }, []);
 
     const handleEmojiSelect = useCallback(
-        (emoji: string) => {
+        (emoji: EmojiType) => {
             const newText =
                 message.substring(0, selection.start) +
-                emoji +
+                emoji.emoji +
                 message.substring(selection.end);
             setMessage(newText);
-            const newPosition = selection.start + emoji.length;
+            const newPosition = selection.start + emoji.emoji.length;
             setSelection({ start: newPosition, end: newPosition });
         },
         [message, selection],
@@ -589,14 +588,12 @@ export default function ChatScreen() {
                     </Fragment>
                 )}
             </KeyboardAvoidingView>
-            {isOpenEmoji && (
-                <OutsidePressHandler
-                    style={styles.emojiContainer}
-                    onOutsidePress={handleHideEmoji}
-                >
-                    <EmojiSelector onEmojiSelected={handleEmojiSelect} />
-                </OutsidePressHandler>
-            )}
+
+            <EmojiPicker
+                onEmojiSelected={handleEmojiSelect}
+                open={isOpenEmoji}
+                onClose={handleHideEmoji}
+            />
         </SafeAreaView>
     );
 }

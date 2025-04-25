@@ -204,7 +204,7 @@ export default function NewGroupScreen() {
             const conversation = conversations.find(
                 (conversation) =>
                     conversation.conversation.conversationID ===
-                    newGroup.data.groupID,
+                    newGroup.data.conversationID,
             );
 
             setConversations(conversations);

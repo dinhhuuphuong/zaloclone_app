@@ -10,6 +10,7 @@ import { toGroupMembers } from '../utils';
 
 interface KickData {
     conversationID: string;
+    memberID: string;
     // Thêm các thuộc tính khác nếu cần
 }
 
@@ -57,7 +58,8 @@ const useMemberOfGroupSocket = (): void => {
                     console.error('Lỗi khi lấy thông tin nhóm:', err);
                 }
             };
-            fetchInfoGroup();
+
+            if (userID === data.memberID) fetchInfoGroup();
         };
 
         const handleGroupDeleted = (conversationID: string): void => {
