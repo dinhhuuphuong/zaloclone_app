@@ -22,10 +22,14 @@
     "axios": "^1.8.4",
     "date-fns": "^4.1.0",
     "expo": "~52.0.43",
+    "expo-av": "~15.0.2",
     "expo-document-picker": "^13.0.3",
+    "expo-file-system": "~18.0.12",
     "expo-firebase-recaptcha": "^2.3.1",
     "expo-image-picker": "^16.0.6",
     "expo-linear-gradient": "^14.0.2",
+    "expo-media-library": "~17.0.6",
+    "expo-sharing": "~13.0.1",
     "expo-splash-screen": "^0.29.24",
     "expo-status-bar": "~2.0.1",
     "expo-system-ui": "~4.0.9",
@@ -45,12 +49,7 @@
     "socket.io-client": "^4.8.1",
     "uuid": "^11.1.0",
     "zalo-clone": "file:",
-    "zustand": "^5.0.3",
-    "expo-audio": "~0.3.5",
-    "expo-av": "~15.0.2",
-    "expo-media-library": "~17.0.6",
-    "expo-sharing": "~13.0.1",
-    "expo-file-system": "~18.0.12"
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

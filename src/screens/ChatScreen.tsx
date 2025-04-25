@@ -86,7 +86,6 @@ export default function ChatScreen() {
                 chat?.conversationID,
         );
     }, [conversationList, chat?.conversationID]);
-    console.log('members', chat?.conversationID && group[chat?.conversationID]);
     const isGroup = conversation?.conversation.conversationType === 'group';
 
     const handleMessageChange = useCallback((text: string) => {

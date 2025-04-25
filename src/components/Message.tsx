@@ -3,8 +3,13 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import React, { useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { RootStackParamList } from '../navigation/types';
+import {
+    deleteMessage as deleteMessageInGroup,
+    revokeMessage as revokeMessageInGroup,
+} from '../services/groupService';
 import { deleteMessage, revokeMessage } from '../services/messageService';
 import useChatStore from '../stores/chatStore';
+import useConversationsStore from '../stores/conversationsStore';
 import useGroupStore from '../stores/groupStore';
 import { IMessage } from '../stores/messagesStore';
 import { parseTimestamp, showError } from '../utils';
@@ -58,10 +63,26 @@ const Message = ({
             (member) => member.userID === message.senderID,
         );
     }, [chat, message.senderID]);
+    const { conversations: conversationList } = useConversationsStore();
+    const conversation = useMemo(() => {
+        if (!conversationList) return null;
+
+        return conversationList.find(
+            (conversation) =>
+                conversation.conversation.conversationID ===
+                chat?.conversationID,
+        );
+    }, [conversationList, chat?.conversationID]);
+    const isGroup = conversation?.conversation.conversationType === 'group';
 
     const handleDeleteMessage = async () => {
         try {
-            await deleteMessage(message.messageID, message.conversationID);
+            if (isGroup)
+                await deleteMessageInGroup(
+                    message.messageID,
+                    message.conversationID,
+                );
+            else await deleteMessage(message.messageID, message.conversationID);
         } catch (error) {
             showError(error, 'Có lỗi xảy ra khi xóa tin nhắn');
         } finally {
@@ -71,11 +92,17 @@ const Message = ({
 
     const handleRecallMessage = async () => {
         try {
-            await revokeMessage(
-                chat?.userID ?? '',
-                message.messageID,
-                message.conversationID,
-            );
+            if (isGroup)
+                await revokeMessageInGroup(
+                    message.messageID,
+                    message.conversationID,
+                );
+            else
+                await revokeMessage(
+                    chat?.userID ?? '',
+                    message.messageID,
+                    message.conversationID,
+                );
         } catch (error) {
             showError(error, 'Không thể thu hồi tin nhắn');
         } finally {
