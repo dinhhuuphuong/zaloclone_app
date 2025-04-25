@@ -38,7 +38,11 @@ import OutsidePressHandler from 'react-native-outside-press';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Message from '../components/Message';
 import { RootStackParamList } from '../navigation/types';
-import { getMembersOfGroup, sendMessage } from '../services/groupService';
+import {
+    getMembersOfGroup,
+    sendFiles as sendFilesForGroup,
+    sendMessage,
+} from '../services/groupService';
 import {
     getMessagesByConversation,
     sendFiles,
@@ -49,6 +53,7 @@ import useConversationsStore from '../stores/conversationsStore';
 import useGroupStore from '../stores/groupStore';
 import useMessagesStore from '../stores/messagesStore';
 import useUserOnlineStore from '../stores/userOnlineStore';
+import useUserStore from '../stores/userStore';
 import { toGroupMembers } from '../utils';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'Options'>;
@@ -60,6 +65,7 @@ export default function ChatScreen() {
     const [showImagePreview, setShowImagePreview] = useState(false);
     const [selection, setSelection] = useState({ start: 0, end: 0 });
     const navigation = useNavigation<NavigationProp>();
+    const { user } = useUserStore();
     const { chat, setConversationID } = useChatStore();
     const { group, setMembers } = useGroupStore();
     const { userOnline } = useUserOnlineStore();
@@ -91,25 +97,38 @@ export default function ChatScreen() {
         if (selectedImages.length === 0) return;
 
         try {
-            const response = await sendFiles(chat?.userID ?? '', files);
+            console.log(
+                'conversation?.conversation.conversationType',
+                conversation?.conversation.conversationType,
+            );
 
-            setFiles([]);
-            setSelectedImages([]);
-            setShowImagePreview(false);
+            if (conversation?.conversation.conversationType === 'group') {
+                if (chat?.conversationID === undefined) return;
 
-            if (response.createConversation?.conversationID) {
-                setConversationID(response.createConversation.conversationID);
-                addConversation({
-                    conversation: {
-                        ...response.createConversation,
-                        receiver: {
-                            ...chat,
+                await sendFilesForGroup(chat?.conversationID, files);
+            } else {
+                const response = await sendFiles(chat?.userID ?? '', files);
+
+                setFiles([]);
+                setSelectedImages([]);
+                setShowImagePreview(false);
+
+                if (response.createConversation?.conversationID) {
+                    setConversationID(
+                        response.createConversation.conversationID,
+                    );
+                    addConversation({
+                        conversation: {
+                            ...response.createConversation,
+                            receiver: {
+                                ...chat,
+                            },
                         },
-                    },
-                    lastMessage: {
-                        ...response.createNewMessage,
-                    },
-                });
+                        lastMessage: {
+                            ...response.createNewMessage,
+                        },
+                    });
+                }
             }
         } catch (err) {
             console.error('Lỗi khi gửi file:', err);
@@ -198,21 +217,29 @@ export default function ChatScreen() {
     const handleSendFiles = useCallback(
         async (file: File) => {
             try {
-                const response = await sendFiles(chat?.userID ?? '', [
-                    file as any,
-                ]);
+                if (conversation?.conversation.conversationType === 'group') {
+                    if (chat?.conversationID === undefined) return;
 
-                if (response.createConversation?.conversationID) {
-                    setConversationID(
-                        response.createConversation.conversationID,
-                    );
-                    addConversation({
-                        conversation: {
-                            ...response.createConversation,
-                            receiver: chat,
-                        },
-                        lastMessage: response.createNewMessage,
-                    });
+                    await sendFilesForGroup(chat?.conversationID, [
+                        file as any,
+                    ]);
+                } else {
+                    const response = await sendFiles(chat?.userID ?? '', [
+                        file as any,
+                    ]);
+
+                    if (response.createConversation?.conversationID) {
+                        setConversationID(
+                            response.createConversation.conversationID,
+                        );
+                        addConversation({
+                            conversation: {
+                                ...response.createConversation,
+                                receiver: chat,
+                            },
+                            lastMessage: response.createNewMessage,
+                        });
+                    }
                 }
             } catch (err) {
                 console.error('Lỗi khi gửi file:', err);
@@ -452,7 +479,7 @@ export default function ChatScreen() {
             >
                 {messages.map((msg) => (
                     <Message
-                        isOther={msg.senderID === chat?.userID}
+                        isOther={msg.senderID !== user?.userID}
                         key={msg.messageID}
                         message={msg}
                     />

@@ -5,8 +5,10 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { RootStackParamList } from '../navigation/types';
 import { deleteMessage, revokeMessage } from '../services/messageService';
 import useChatStore from '../stores/chatStore';
+import useGroupStore from '../stores/groupStore';
 import { IMessage } from '../stores/messagesStore';
 import { parseTimestamp, showError } from '../utils';
+import { Avatar } from './Avatar';
 import { IMessageMedia, MessageMedia } from './MessageMedia';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'ShareMessage'>;
@@ -20,6 +22,7 @@ const Message = ({
 }) => {
     const navigation = useNavigation<NavigationProp>();
     const { chat } = useChatStore();
+    const { group } = useGroupStore();
     const [modalVisible, setModalVisible] = useState(false);
     const isRevoked = message.revoke;
     const isDeletedBySender = message.senderDelete && !isOther;
@@ -47,6 +50,14 @@ const Message = ({
             ];
         }
     }, [message]);
+    const member = useMemo(() => {
+        if (!chat || !chat.conversationID || !group[chat.conversationID])
+            return null;
+
+        return group[chat.conversationID].find(
+            (member) => member.userID === message.senderID,
+        );
+    }, [chat, message.senderID]);
 
     const handleDeleteMessage = async () => {
         try {
@@ -90,6 +101,11 @@ const Message = ({
                 isOther ? styles.userMessageRow : styles.contactMessageRow,
             ]}
         >
+            {isOther && (
+                <View style={styles.pr8}>
+                    <Avatar avatar={member?.avatar} />
+                </View>
+            )}
             <Pressable
                 onLongPress={handleShowModal}
                 style={[
@@ -97,6 +113,12 @@ const Message = ({
                     isOther ? styles.userMessage : styles.contactMessage,
                 ]}
             >
+                {isOther && member?.fullName && (
+                    <Text style={[styles.secondaryText, styles.mb5]}>
+                        {member?.fullName}
+                    </Text>
+                )}
+
                 {isShowMessage || (
                     <Text style={styles.secondaryText}>
                         {isRevoked
@@ -174,11 +196,17 @@ const Message = ({
 export default Message;
 
 const styles = StyleSheet.create({
+    pr8: {
+        paddingRight: 8,
+    },
+    mb5: {
+        marginBottom: 5,
+    },
     messageRow: {
         width: '100%',
         flexDirection: 'row',
         marginBottom: 10,
-        alignItems: 'flex-end',
+        alignItems: 'flex-start',
     },
     userMessageRow: {
         justifyContent: 'flex-start',
