@@ -1,3 +1,5 @@
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import React, { Fragment } from 'react';
 import {
     Image,
@@ -7,7 +9,14 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { isArchive, isAudio, isDocument, isImage, isVideo } from '../utils';
+import {
+    isArchive,
+    isAudio,
+    isDocument,
+    isImage,
+    isVideo,
+    showError,
+} from '../utils';
 import { MessageAudio } from './MessageAudio';
 import { MessageVideo } from './MessageVideo';
 
@@ -33,6 +42,50 @@ export const MessageMedia = ({ medias }: { medias: Array<IMessageMedia> }) => {
         }
     };
 
+    const downloadFile = async (
+        url: string,
+        filename: string,
+        isPdf?: boolean,
+    ) => {
+        try {
+            if (isPdf) {
+                handleOpenPDF(url);
+                return;
+            }
+
+            // Tạo đường dẫn đầy đủ để lưu file
+            const fileUri = FileSystem.documentDirectory + filename;
+
+            // Tạo callback theo dõi tiến trình nếu được cung cấp
+            const callback = undefined;
+
+            // Tạo đối tượng DownloadResumable
+            const downloadResumable = FileSystem.createDownloadResumable(
+                url,
+                fileUri,
+                {},
+                callback,
+            );
+
+            // Bắt đầu tải xuống
+            const result = await downloadResumable.downloadAsync();
+            console.log('Tải xuống hoàn tất, file được lưu tại: ', result?.uri);
+
+            // Kiểm tra xem thiết bị có hỗ trợ chia sẻ không
+            const isSharingAvailable = await Sharing.isAvailableAsync();
+
+            if (isSharingAvailable && result?.uri) {
+                // Mở file bằng ứng dụng mặc định trên thiết bị
+                await Sharing.shareAsync(result.uri);
+            } else {
+                alert('Chia sẻ không khả dụng trên thiết bị này');
+            }
+        } catch (error) {
+            console.error('Lỗi khi tải file:', error);
+            showError(error, 'Lỗi khi tải file');
+        }
+    };
+
     return (
         <>
             {medias.map((media) => (
@@ -51,7 +104,13 @@ export const MessageMedia = ({ medias }: { medias: Array<IMessageMedia> }) => {
 
                     {isDocument(media.type) && (
                         <TouchableOpacity
-                            onPress={() => handleOpenPDF(media.url)}
+                            onPress={() =>
+                                downloadFile(
+                                    media.url,
+                                    media.content,
+                                    media.type === 'pdf',
+                                )
+                            }
                         >
                             <View style={styles.pdfContainer}>
                                 <Text style={styles.pdfText}>
@@ -62,7 +121,11 @@ export const MessageMedia = ({ medias }: { medias: Array<IMessageMedia> }) => {
                     )}
 
                     {isArchive(media.type) && (
-                        <TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() =>
+                                downloadFile(media.url, media.content)
+                            }
+                        >
                             <View style={styles.pdfContainer}>
                                 <Text style={styles.pdfText}>
                                     📄 {media.content ?? 'PDF File'}
