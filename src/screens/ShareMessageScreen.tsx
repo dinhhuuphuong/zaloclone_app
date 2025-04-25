@@ -16,7 +16,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
+import { shareMessage as shareMessageGroup } from '../services/groupService';
 import { shareMessage } from '../services/messageService';
+import useConversationsStore, {
+    IConversation,
+} from '../stores/conversationsStore';
 import useFriendsStore from '../stores/friendsStore';
 import { IUserBase } from '../types/user';
 import { showError } from '../utils';
@@ -26,13 +30,39 @@ type RouteProps = RouteProp<RootStackParamList, 'ShareMessage'>;
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('');
 
+type IShareItem = IUserBase & {
+    type: 'group' | 'single';
+};
+
+const toShareItem = (item: IUserBase): IShareItem => ({
+    ...item,
+    type: 'single',
+});
+
+const toShareItems = (items: IUserBase[]): IShareItem[] =>
+    items.map(toShareItem);
+
+const toShareGroupItem = (item: IConversation): IShareItem => {
+    const receiver = item.conversation.receiver;
+
+    return {
+        avatar: receiver?.avatar || '',
+        fullName: receiver?.fullName || '',
+        userID: item.conversation.conversationID,
+        type: 'group',
+    };
+};
+
+const toShareGroupItems = (items: IConversation[]): IShareItem[] =>
+    items.map(toShareGroupItem);
+
 const Item = ({
     isSelected,
     item,
     toggleContactSelection,
 }: {
     isSelected: boolean;
-    item: IUserBase;
+    item: IShareItem;
     toggleContactSelection: (id: string) => void;
 }) => (
     <TouchableOpacity
@@ -49,7 +79,12 @@ const Item = ({
             </View>
         </View>
         <Image source={{ uri: item.avatar }} style={styles.avatar} />
-        <Text style={styles.contactName}>{item.fullName}</Text>
+        <View>
+            <Text style={styles.contactName}>{item.fullName}</Text>
+            <Text style={styles.contactType}>
+                {item.type === 'group' ? 'Nhóm' : 'Bạn bè'}
+            </Text>
+        </View>
     </TouchableOpacity>
 );
 
@@ -60,8 +95,23 @@ export default function ShareMessage() {
     const navigation = useNavigation<NavigationProp>();
     const [message, setMessage] = useState(messageData.messageContent);
     const [searchQuery, setSearchQuery] = useState('');
-    const { friends } = useFriendsStore();
+    const { friends: friendList } = useFriendsStore();
+    const { conversations } = useConversationsStore();
     const [usersSelected, setUsersSelected] = useState<Array<string>>([]);
+
+    const conversationsGroup = useMemo(() => {
+        return conversations?.filter(
+            (conversation) =>
+                conversation.conversation.conversationType === 'group',
+        );
+    }, [conversations]);
+
+    const friends = useMemo(() => {
+        return [
+            ...toShareGroupItems(conversationsGroup ?? []),
+            ...toShareItems(friendList),
+        ];
+    }, [friendList, conversationsGroup]);
 
     const { selectedContacts, selectedCount } = useMemo(() => {
         const selectedContacts = friends.filter((contact) =>
@@ -85,15 +135,55 @@ export default function ShareMessage() {
     const handleBack = () => navigation.goBack();
 
     const handleShare = async () => {
+        const { groupIds, userIds } = usersSelected.reduce(
+            (prev, item) => {
+                const share = friends.find((friend) => friend.userID === item);
+
+                if (!share) return prev;
+
+                const userIds = prev.userIds;
+                const groupIds = prev.groupIds;
+
+                if (share?.type === 'single') {
+                    userIds.push(share.userID);
+                } else {
+                    groupIds.push(share.userID);
+                }
+
+                return {
+                    userIds,
+                    groupIds,
+                };
+            },
+            {
+                userIds: [],
+                groupIds: [],
+            } as {
+                userIds: string[];
+                groupIds: string[];
+            },
+        );
+
         try {
-            await shareMessage(
-                messageData.messageID,
-                usersSelected,
-                messageData.conversationID,
-            );
+            const queries = [];
+
+            if (userIds.length > 0) {
+                queries.push(
+                    shareMessage(
+                        messageData.messageID,
+                        usersSelected,
+                        messageData.conversationID,
+                    ),
+                );
+            }
+
+            if (groupIds.length > 0) {
+                queries.push(shareMessageGroup(message.messageID, groupIds));
+            }
+
+            if (queries.length) await Promise.all(queries);
 
             navigation.goBack();
-
             Alert.alert('Thành công', 'Chia sẻ tin nhắn thành công');
         } catch (error) {
             showError(error, 'Có lỗi xảy ra khi chia sẻ tin nhắn');
@@ -137,7 +227,6 @@ export default function ShareMessage() {
 
             {/* Contacts List */}
             <View style={styles.listContainer}>
-                <Text style={styles.sectionHeader}>H</Text>
                 <FlatList
                     data={friends}
                     renderItem={(item) => (
@@ -307,6 +396,10 @@ const styles = StyleSheet.create({
     },
     contactName: {
         fontSize: 16,
+    },
+    contactType: {
+        fontSize: 14,
+        color: '#666',
     },
     alphabetIndex: {
         position: 'absolute',
