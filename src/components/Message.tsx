@@ -15,6 +15,7 @@ import { IMessage } from '../stores/messagesStore';
 import { parseTimestamp, showError } from '../utils';
 import { Avatar } from './Avatar';
 import { IMessageMedia, MessageMedia } from './MessageMedia';
+import MessageSystem from './MessageSystem';
 import ReplyMessage from './ReplyMessage';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'ShareMessage'>;
@@ -130,6 +131,10 @@ const Message = ({
         setReplyMessage(message);
         setModalVisible(false);
     };
+
+    if (message.messageType === 'system') {
+        return <MessageSystem message={message} />;
+    }
 
     return (
         <View
