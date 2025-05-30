@@ -27,6 +27,19 @@ const UpdatePassword = () => {
     const navigation = useNavigation();
 
     const handleFinalSubmit = async () => {
+        const currentPasswordError = validatePassword(currentPassword);
+        const newPasswordError = validatePassword(newPassword);
+        const confirmPasswordError = validateConfirmPassword(confirmPassword);
+
+        setErrors((prev) => ({
+            ...prev,
+            currentPassword: currentPasswordError,
+        }));
+
+        if (currentPasswordError || newPasswordError || confirmPasswordError) {
+            return;
+        }
+
         // Xử lý logic cập nhật mật khẩu ở đây
         console.log('Updating password...');
         try {
@@ -48,7 +61,22 @@ const UpdatePassword = () => {
     };
 
     const validatePassword = (passWord: string): string => {
-        return passWord.length >= 6 ? '' : 'Mật khẩu phải có ít nhất 6 ký tự';
+        if (passWord.length < 6) {
+            return 'Phải có ít nhất 6 ký tự';
+        }
+        if (!/[A-Z]/.test(passWord)) {
+            return 'Phải có ít nhất 1 chữ cái viết hoa';
+        }
+        if (!/[a-z]/.test(passWord)) {
+            return 'Phải có ít nhất 1 chữ cái viết thường';
+        }
+        if (!/[0-9]/.test(passWord)) {
+            return 'Phải có ít nhất 1 chữ số';
+        }
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(passWord)) {
+            return 'Phải chứa ít nhất 1 ký tự đặc biệt (ví dụ: !, @, #, $, %...)';
+        }
+        return '';
     };
 
     const validateConfirmPassword = (confirmPassword: string): string => {

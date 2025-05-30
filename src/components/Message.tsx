@@ -15,14 +15,17 @@ import { IMessage } from '../stores/messagesStore';
 import { parseTimestamp, showError } from '../utils';
 import { Avatar } from './Avatar';
 import { IMessageMedia, MessageMedia } from './MessageMedia';
+import ReplyMessage from './ReplyMessage';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'ShareMessage'>;
 
 const Message = ({
+    isReply = false,
     isOther,
     message,
     setReplyMessage,
 }: {
+    isReply?: boolean;
     isOther: boolean;
     message: IMessage;
     setReplyMessage: (message: IMessage) => void;
@@ -135,7 +138,7 @@ const Message = ({
                 isOther ? styles.userMessageRow : styles.contactMessageRow,
             ]}
         >
-            {isOther && (
+            {isOther && !isReply && (
                 <View style={styles.pr8}>
                     <Avatar avatar={member?.avatar} />
                 </View>
@@ -144,10 +147,16 @@ const Message = ({
                 onLongPress={handleShowModal}
                 style={[
                     styles.messageContainer,
-                    isOther ? styles.userMessage : styles.contactMessage,
+                    isReply
+                        ? {
+                              width: '100%',
+                          }
+                        : isOther
+                        ? styles.userMessage
+                        : styles.contactMessage,
                 ]}
             >
-                {isOther && member?.fullName && (
+                {!isReply && isOther && member?.fullName && (
                     <Text style={[styles.secondaryText, styles.mb5]}>
                         {member?.fullName}
                     </Text>
@@ -162,14 +171,7 @@ const Message = ({
                 )}
 
                 {isShowMessage && message.reply && (
-                    <View style={styles.receivedBubble}>
-                        <View style={styles.leftAccent} />
-                        <View style={styles.contentContainer}>
-                            <Text style={styles.subtitleText}>
-                                {message.reply}
-                            </Text>
-                        </View>
-                    </View>
+                    <ReplyMessage message={message} />
                 )}
 
                 {isShowMessage && <MessageMedia medias={messageDetails} />}
@@ -184,9 +186,11 @@ const Message = ({
                             {message.messageContent}
                         </Text>
                     )}
-                <Text style={styles.timeText}>
-                    {parseTimestamp(message.createdAt)}
-                </Text>
+                {isReply || (
+                    <Text style={styles.timeText}>
+                        {parseTimestamp(message.createdAt)}
+                    </Text>
+                )}
             </Pressable>
 
             <Modal

@@ -88,7 +88,7 @@ const CustomInput = ({
     label,
     value,
     onChangeText,
-    onBlur = ()  => {},
+    onBlur = () => {},
     placeholder,
     secureTextEntry = false,
     keyboardType = 'default',
@@ -128,6 +128,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     const [passwordError, setPasswordError] = useState<string>('');
     const [confirmPasswordError, setConfirmPasswordError] =
         useState<string>('');
+    const [fullNameError, setFullNameError] = useState<string>('');
     const [dayOfBirthError, setDayOfBirthError] = useState<string>('');
     const [avatarError, setAvatarError] = useState<string>('');
 
@@ -139,7 +140,9 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     // Validation functions
     const validatePhone = (phoneNumber: string): string => {
         const phoneRegex = /(0[3|5|7|8|9])+(\d{8})\b/;
-        return phoneRegex.test(phoneNumber) ? '' : 'Số điện thoại không hợp lệ';
+        return phoneRegex.test(phoneNumber)
+            ? ''
+            : 'Bắt đầu bằng 03|05|07|08|09 và có 10 số';
     };
 
     const validateOTP = (otp: string): string => {
@@ -147,7 +150,22 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     };
 
     const validatePassword = (passWord: string): string => {
-        return passWord.length >= 6 ? '' : 'Mật khẩu phải có ít nhất 6 ký tự';
+        if (passWord.length < 6) {
+            return 'Phải có ít nhất 6 ký tự';
+        }
+        if (!/[A-Z]/.test(passWord)) {
+            return 'Phải có ít nhất 1 chữ cái viết hoa';
+        }
+        if (!/[a-z]/.test(passWord)) {
+            return 'Phải có ít nhất 1 chữ cái viết thường';
+        }
+        if (!/[0-9]/.test(passWord)) {
+            return 'Phải có ít nhất 1 chữ số';
+        }
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(passWord)) {
+            return 'Phải chứa ít nhất 1 ký tự đặc biệt (ví dụ: !, @, #, $, %...)';
+        }
+        return '';
     };
 
     const validateConfirmPassword = (confirm_password: string): string => {
@@ -160,12 +178,56 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         console.log('🚀 ~ validateDayOfBirth ~ dayOfBirth:', dayOfBirth);
         const dayOfBirthRegex =
             /^(0[1-9]|[12]\d|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/;
-        return dayOfBirthRegex.test(dayOfBirth) ? '' : 'Ngày sinh không hợp lệ';
+
+        if (!dayOfBirthRegex.test(dayOfBirth)) {
+            return 'Ngày sinh không hợp lệ';
+        }
+
+        const [day, month, year] = dayOfBirth.split(/[- /.]/);
+
+        const birthdate = new Date(
+            Number(year),
+            Number(month) - 1,
+            Number(day),
+        );
+
+        if (isNaN(birthdate.getTime())) {
+            return 'Ngày sinh không hợp lệ';
+        }
+
+        const today = new Date();
+        const birthDate = new Date(dayOfBirth);
+
+        const age = today.getFullYear() - birthDate.getFullYear();
+        const hasHadBirthdayThisYear =
+            today.getMonth() > birthDate.getMonth() ||
+            (today.getMonth() === birthDate.getMonth() &&
+                today.getDate() >= birthDate.getDate());
+
+        const actualAge = hasHadBirthdayThisYear ? age : age - 1;
+
+        return actualAge >= 18 ? '' : 'Người dùng phải đủ 18 tuổi trở lên';
+    };
+
+    const validateFullName = (fullName: string): string => {
+        if (fullName.length === 0) return 'Họ tên không được để trống';
+
+        const nameRegex = /^[A-Za-zÀ-Ỹà-ỹ0-9\s]+$/;
+
+        if (!nameRegex.test(fullName)) {
+            return 'Chỉ được chứa chữ cái, chữ số và dấu cách (không chứa số hoặc ký tự đặc biệt)';
+        }
+
+        return '';
     };
 
     // Hàm thay đổi giá trị form
     const handleChange = (name: keyof FormData, value: string): void => {
         setFormData((prev) => ({ ...prev, [name]: value }));
+
+        if (name === 'phoneNumber') {
+            setPhoneError(validatePhone(value));
+        }
 
         // Không thực hiện validation tức thời cho phoneNumber và otp để tránh re-render
     };
@@ -293,13 +355,20 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         const avatarError = !formData.avatar
             ? 'Vui lòng chọn ảnh đại diện'
             : '';
+        const fullNameError = validateFullName(formData.fullName);
 
         setPasswordError(pwdError);
         setConfirmPasswordError(confirmPwdError);
         setDayOfBirthError(birthError);
         setAvatarError(avatarError);
-
-        if (!pwdError && !confirmPwdError && !birthError && !avatarError) {
+        setFullNameError(fullNameError);
+        if (
+            !pwdError &&
+            !confirmPwdError &&
+            !birthError &&
+            !avatarError &&
+            !fullNameError
+        ) {
             try {
                 // Chuyển đổi dữ liệu form để phù hợp với API
                 const apiFormData = {
@@ -323,7 +392,9 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 console.error('Lỗi khi đăng ký', JSON.stringify(error));
                 Alert.alert(
                     'Lỗi',
-                    error.data?.message || error.message || 'Số điện thoại đã tồn tại!',
+                    error.data?.message ||
+                        error.message ||
+                        'Số điện thoại đã tồn tại!',
                 );
             }
         }
@@ -447,6 +518,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                                 handleChange('fullName', text)
                             }
                             placeholder='Nhập tên người dùng'
+                            error={fullNameError}
                         />
 
                         <View style={styles.genderContainer}>
@@ -518,7 +590,6 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                                     validateDayOfBirth(formData.dayOfBirth),
                                 )
                             }
-                            
                             error={dayOfBirthError}
                         />
 
@@ -530,7 +601,9 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                                 handleChange('passWord', text)
                             }
                             onBlur={() =>
-                                setPasswordError(validatePassword(formData.passWord))
+                                setPasswordError(
+                                    validatePassword(formData.passWord),
+                                )
                             }
                             error={passwordError}
                             placeholder='Nhập mật khẩu'
@@ -545,7 +618,9 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                             }
                             onBlur={() =>
                                 setConfirmPasswordError(
-                                    validateConfirmPassword(formData.confirm_password),
+                                    validateConfirmPassword(
+                                        formData.confirm_password,
+                                    ),
                                 )
                             }
                             error={confirmPasswordError}

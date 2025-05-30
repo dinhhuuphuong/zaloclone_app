@@ -105,7 +105,9 @@ const ForgotPassword: React.FC = () => {
 
     const validatePhone = (phoneNumber: string): string => {
         const phoneRegex = /(0[3|5|7|8|9])+([0-9]{8})\b/;
-        return phoneRegex.test(phoneNumber) ? '' : 'Số điện thoại không hợp lệ';
+        return phoneRegex.test(phoneNumber)
+            ? ''
+            : 'Bắt đầu bằng 03|05|07|08|09 và có 10 số';
     };
 
     const validateOTP = (otp: string): string => {
@@ -113,7 +115,22 @@ const ForgotPassword: React.FC = () => {
     };
 
     const validatePassword = (passWord: string): string => {
-        return passWord.length >= 6 ? '' : 'Mật khẩu phải có ít nhất 6 ký tự';
+        if (passWord.length < 6) {
+            return 'Phải có ít nhất 6 ký tự';
+        }
+        if (!/[A-Z]/.test(passWord)) {
+            return 'Phải có ít nhất 1 chữ cái viết hoa';
+        }
+        if (!/[a-z]/.test(passWord)) {
+            return 'Phải có ít nhất 1 chữ cái viết thường';
+        }
+        if (!/[0-9]/.test(passWord)) {
+            return 'Phải có ít nhất 1 chữ số';
+        }
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(passWord)) {
+            return 'Phải chứa ít nhất 1 ký tự đặc biệt (ví dụ: !, @, #, $, %...)';
+        }
+        return '';
     };
 
     const validateConfirmPassword = (confirm_password: string): string => {
